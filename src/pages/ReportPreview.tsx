@@ -73,10 +73,13 @@ export default function ReportPreview() {
       <div className="print-report" style={{
         background: '#fff',
         maxWidth: '700px',
-        margin: '24px auto',
-        padding: '32px',
+        width: '100%',
+        margin: '16px auto',
+        padding: 'clamp(16px, 4vw, 32px)',
         borderRadius: 'var(--radius-xl)',
         boxShadow: 'var(--shadow-md)',
+        boxSizing: 'border-box',
+        overflowX: 'hidden',
       }}>
         <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#6c5ce7', margin: 0 }}>احسبها صح</h1>
         <p style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>
@@ -102,7 +105,8 @@ export default function ReportPreview() {
 
         <h2 style={h2Style}>خطة الزواج</h2>
         {activeCategories.length > 0 ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '360px' }}>
             <thead>
               <tr>
                 {['البند الرئيسي', 'المخطط', 'المصروف', 'المتبقي', 'الإنجاز'].map(h => (
@@ -131,11 +135,13 @@ export default function ReportPreview() {
               })}
             </tbody>
           </table>
+          </div>
         ) : <p style={emptyStyle}>لا توجد بنود رئيسية.</p>}
 
         <h2 style={h2Style}>الدفعات</h2>
         {paidExpenses.length > 0 ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '320px' }}>
             <thead>
               <tr>
                 {['البند الرئيسي', 'العنصر', 'التاريخ', 'المبلغ'].map(h => (
@@ -160,11 +166,13 @@ export default function ReportPreview() {
               })}
             </tbody>
           </table>
+          </div>
         ) : <p style={emptyStyle}>لا توجد دفعات مسجلة.</p>}
 
         <h2 style={h2Style}>المساهمات</h2>
         {support.length > 0 ? (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '320px' }}>
             <thead>
               <tr>
                 {['الاسم', 'الصلة', 'المبلغ', 'الحالة', 'التاريخ'].map(h => (
@@ -189,6 +197,7 @@ export default function ReportPreview() {
               })}
             </tbody>
           </table>
+          </div>
         ) : <p style={emptyStyle}>لا توجد مساهمات مسجلة.</p>}
 
         <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '11px', color: '#aaa', borderTop: '1px solid #eee', paddingTop: '16px' }}>

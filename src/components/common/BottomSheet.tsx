@@ -10,11 +10,6 @@ interface BottomSheetProps {
   snapHeight?: 'auto' | 'half' | 'full';
 }
 
-const snapHeightMap: Record<string, string> = {
-  auto: 'auto',
-  half: '50dvh',
-  full: '90dvh',
-};
 
 export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeight = 'auto' }: BottomSheetProps) {
   React.useEffect(() => {
@@ -41,7 +36,6 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
     animation: 'fadeIn 200ms both',
   };
 
-  const sheetMaxHeight = snapHeightMap[snapHeight] ?? 'auto';
   const sheetStyle: React.CSSProperties = {
     position: 'fixed',
     bottom: 0,
@@ -52,10 +46,11 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
     borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0',
     boxShadow: 'var(--shadow-xl)',
     animation: 'slideUp 300ms cubic-bezier(0.32,0.72,0,1) both',
-    maxHeight: snapHeight === 'auto' ? '90dvh' : sheetMaxHeight,
-    height: snapHeight === 'full' ? '90dvh' : undefined,
+    maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 12px)',
+    height: snapHeight === 'full' ? 'calc(100dvh - env(safe-area-inset-top, 0px) - 12px)' : undefined,
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden',
   };
 
   const dragBarStyle: React.CSSProperties = {
@@ -102,13 +97,13 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
     WebkitOverflowScrolling: 'touch' as const,
     flex: 1,
     padding: 'var(--space-3) var(--space-5)',
-    paddingBottom: footer ? 'var(--space-2)' : `calc(var(--safe-bottom) + var(--space-6))`,
+    paddingBottom: footer ? 'var(--space-3)' : 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
   };
 
   const footerStyle: React.CSSProperties = {
     flexShrink: 0,
     padding: 'var(--space-3) var(--space-5)',
-    paddingBottom: `calc(var(--safe-bottom) + var(--space-4))`,
+    paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
     borderTop: '1px solid var(--border-light)',
     background: 'var(--bg-card)',
   };

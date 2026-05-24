@@ -205,8 +205,17 @@ body[data-sheet-open="true"] .bottom-nav {
 
 /* --- Print --- */
 @media print {
-  body * { visibility: hidden; }
-  .print-report, .print-report * { visibility: visible; }
   .no-print { display: none !important; }
-  .print-report { position: absolute; inset: 0; width: 100%; }
+  body { background: #fff !important; }
+  .print-report {
+    display: block !important;
+    direction: rtl;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  @page { margin: 14mm; }
 }
