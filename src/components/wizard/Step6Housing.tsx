@@ -1,13 +1,12 @@
 import React from 'react';
 import Button from '../common/Button';
-import { CheckIcon, HomeIcon } from '../common/Icons';
 import type { HousingSituation } from '../../types';
 
-const OPTIONS: { value: HousingSituation; label: string; subtitle: string }[] = [
-  { value: 'family', label: 'بيت الأهل', subtitle: 'السكن مع الأهل مؤقتاً' },
-  { value: 'rent', label: 'إيجار', subtitle: 'شقة أو وحدة سكنية' },
-  { value: 'villa', label: 'فيلا / بيت مستقل', subtitle: 'امتلاك أو إيجار فيلا' },
-  { value: 'undecided', label: 'بعدني ما قررت', subtitle: 'يمكن تحديده لاحقاً' },
+const OPTIONS: { value: HousingSituation; label: string; desc: string }[] = [
+  { value: 'family', label: 'بيت الأهل', desc: 'السكن مع الأهل مؤقتاً' },
+  { value: 'rent', label: 'إيجار', desc: 'شقة أو وحدة سكنية' },
+  { value: 'villa', label: 'فيلا / بيت مستقل', desc: 'امتلاك أو إيجار فيلا' },
+  { value: 'undecided', label: 'بعدني ما قررت', desc: 'يمكن تحديده لاحقاً' },
 ];
 
 interface Step6HousingProps {
@@ -18,175 +17,66 @@ interface Step6HousingProps {
 
 export default function Step6Housing({ value, onChange, onNext }: Step6HousingProps) {
   return (
-    <div style={containerStyle}>
-      <div style={scrollAreaStyle}>
-        <span style={iconRingStyle}>
-          <HomeIcon size={26} color="var(--accent)" />
-        </span>
-        <h1 style={titleStyle}>وين بتسكن بعد الزواج؟</h1>
-        <p style={subtitleStyle}>عشان نرتب لك البنود المناسبة.</p>
+    <div style={screen}>
+      <div style={scroll}>
+        <p style={stepLabel}>السكن</p>
+        <h1 style={title}>وين بتسكن بعد الزواج؟</h1>
+        <p style={subtitle}>عشان نرتب لك البنود المناسبة.</p>
 
-        <div style={optionsStyle}>
-          {OPTIONS.map(opt => {
+        <div style={optionsWrap}>
+          {OPTIONS.map((opt) => {
             const selected = value === opt.value;
             return (
               <button
                 key={opt.value}
                 type="button"
-                style={{
-                  ...optionStyle,
-                  ...(selected ? optionSelectedStyle : optionDefaultStyle),
-                }}
+                style={optionCard(selected)}
                 onClick={() => onChange(opt.value)}
                 aria-pressed={selected}
               >
-                <div style={optionTextStyle}>
-                  <span style={{
-                    fontSize: 'var(--font-size-base)',
-                    fontWeight: 700,
-                    color: selected ? 'var(--accent)' : 'var(--text-primary)',
-                  }}>
-                    {opt.label}
-                  </span>
-                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                    {opt.subtitle}
-                  </span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 'var(--font-size-base)', fontWeight: 700, color: selected ? 'var(--accent)' : 'var(--text-primary)' }}>{opt.label}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{opt.desc}</p>
                 </div>
-                {selected && (
-                  <span style={checkStyle}>
-                    <CheckIcon size={12} color="var(--text-inverse)" />
-                  </span>
-                )}
+                {selected && <CheckMark />}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div style={footerStyle}>
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          onClick={onNext}
-        >
+      <div style={footer}>
+        <Button variant="primary" size="lg" fullWidth onClick={onNext}>
           التالي
         </Button>
         {!value && (
-          <button type="button" style={skipStyle} onClick={onNext}>
-            تخطى
-          </button>
+          <button type="button" style={skipBtn} onClick={onNext}>تخطى</button>
         )}
       </div>
     </div>
   );
 }
 
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-};
+function CheckMark() {
+  return (
+    <span style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+    </span>
+  );
+}
 
-const scrollAreaStyle: React.CSSProperties = {
-  flex: 1,
-  overflowY: 'auto',
-  paddingBottom: 'var(--space-4)',
-};
+const screen: React.CSSProperties = { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' };
+const scroll: React.CSSProperties = { flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-6) var(--space-6) var(--space-4)', display: 'flex', flexDirection: 'column' };
+const footer: React.CSSProperties = { padding: 'var(--space-4) var(--space-6)', paddingBottom: 'calc(var(--space-4) + env(safe-area-inset-bottom, 0px))', flexShrink: 0, borderTop: '1px solid var(--border-light)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' };
 
-const iconRingStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '60px',
-  height: '60px',
-  borderRadius: 'var(--radius-full)',
-  background: 'var(--accent-light)',
-  boxShadow: '0 4px 12px rgba(201,147,104,0.18)',
-  marginBottom: 'var(--space-4)',
-};
+const stepLabel: React.CSSProperties = { margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.8px' };
+const title: React.CSSProperties = { margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 };
+const subtitle: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', lineHeight: 1.7 };
 
-const titleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-xl)',
-  fontWeight: 800,
-  color: 'var(--text-primary)',
-  marginBottom: 'var(--space-2)',
-  lineHeight: 1.4,
-};
+const optionsWrap: React.CSSProperties = { marginTop: 'var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' };
 
-const subtitleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-secondary)',
-  marginBottom: 'var(--space-6)',
-};
+function optionCard(selected: boolean): React.CSSProperties {
+  return { display: 'flex', alignItems: 'center', gap: 'var(--space-4)', padding: 'var(--space-4) var(--space-5)', borderRadius: 'var(--radius-xl)', border: `1.5px solid ${selected ? 'var(--accent)' : 'var(--border)'}`, background: selected ? 'var(--accent-light)' : 'var(--bg-card)', cursor: 'pointer', textAlign: 'start', width: '100%', fontFamily: 'var(--font-family)', transition: 'all var(--transition-fast)', WebkitTapHighlightColor: 'transparent', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' };
+}
 
-const optionsStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--space-3)',
-};
-
-const optionStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--space-4)',
-  padding: 'var(--space-4) var(--space-5)',
-  borderRadius: 'var(--radius-xl)',
-  border: '2px solid',
-  cursor: 'pointer',
-  transition: 'all var(--transition-fast)',
-  fontFamily: 'var(--font-family)',
-  textAlign: 'start',
-  width: '100%',
-  WebkitTapHighlightColor: 'transparent',
-};
-
-const optionSelectedStyle: React.CSSProperties = {
-  background: 'var(--accent-light)',
-  borderColor: 'var(--accent)',
-  boxShadow: '0 0 0 1px var(--accent)',
-};
-
-const optionDefaultStyle: React.CSSProperties = {
-  background: 'var(--bg-card)',
-  borderColor: 'var(--border)',
-  boxShadow: 'var(--shadow-sm)',
-};
-
-const optionTextStyle: React.CSSProperties = {
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '2px',
-};
-
-const checkStyle: React.CSSProperties = {
-  width: '22px',
-  height: '22px',
-  borderRadius: 'var(--radius-full)',
-  background: 'var(--accent)',
-  color: 'var(--text-inverse)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-};
-
-const footerStyle: React.CSSProperties = {
-  padding: 'var(--space-6) 0 var(--space-4)',
-  flexShrink: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--space-2)',
-};
-
-const skipStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-  fontFamily: 'var(--font-family)',
-  textAlign: 'center',
-  padding: 'var(--space-2)',
-};
+const skipBtn: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', fontFamily: 'var(--font-family)', textAlign: 'center', padding: 'var(--space-2)', width: '100%' };

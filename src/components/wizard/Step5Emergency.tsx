@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../common/Button';
-import { AlertIcon } from '../common/Icons';
 import { formatCurrency, parseCurrencyInput } from '../../utils/formatting';
 
 type ReserveOption = '0' | '5' | '10' | '15' | 'custom';
@@ -14,15 +13,15 @@ interface Step5EmergencyProps {
   onNext: () => void;
 }
 
-const PCT_OPTIONS = [
-  { key: '5' as const,  label: '5%' },
-  { key: '10' as const, label: '10%', badge: 'مُوصى به' },
-  { key: '15' as const, label: '15%' },
+const PCT_OPTIONS: { key: '5' | '10' | '15'; label: string; badge?: string }[] = [
+  { key: '5', label: '5%' },
+  { key: '10', label: '10%', badge: 'موصى به' },
+  { key: '15', label: '15%' },
 ];
 
 const MODE_OPTIONS: { key: ReserveMode; label: string; desc: string }[] = [
-  { key: 'from_budget', label: 'من الميزانية',  desc: 'ينخصم من ميزانيتك الإجمالية، والباقي يتوزع على خطة الزواج.' },
-  { key: 'extra',       label: 'مبلغ إضافي',   desc: 'ينحسب كاحتياطي فوق الميزانية، وما يقلل المبلغ المتاح للخطة.' },
+  { key: 'from_budget', label: 'من الميزانية', desc: 'ينخصم من ميزانيتك الإجمالية.' },
+  { key: 'extra', label: 'مبلغ إضافي', desc: 'فوق الميزانية، ما يقلل المتاح للخطة.' },
 ];
 
 export default function Step5Emergency({ budget, value, onChange, onNext }: Step5EmergencyProps) {
@@ -56,201 +55,124 @@ export default function Step5Emergency({ budget, value, onChange, onNext }: Step
     onChange(parseCurrencyInput(customRaw), m);
   }
 
-  const effectiveMode: ReserveMode = selected === 'custom' ? customMode : 'from_budget';
-  const deducted = effectiveMode === 'from_budget' && selected !== '0';
   const showPreview = budget > 0 && selected !== '0' && value > 0;
+  const deducted = (selected !== 'custom' && selected !== '0') || (selected === 'custom' && customMode === 'from_budget');
 
   return (
-    <div style={containerStyle}>
-      <div style={contentStyle}>
-        <span style={iconRingStyle}>
-          <AlertIcon size={26} color="var(--accent)" />
-        </span>
-        <h1 style={titleStyle}>تبغي نخصص احتياطي للطوارئ؟</h1>
-        <p style={subtitleStyle}>مبلغ بسيط على جنب للزيادات غير المتوقعة.</p>
+    <div style={screen}>
+      <div style={scroll}>
+        <p style={stepLabel}>الاحتياط</p>
+        <h1 style={title}>تبغي نخلي مبلغ للطوارئ؟</h1>
+        <p style={subtitle}>مبلغ بسيط على جنب للزيادات غير المتوقعة.</p>
 
-        {/* Percentage row */}
-        <div style={pctRowStyle}>
-          {PCT_OPTIONS.map(({ key, label, badge }) => {
-            const active = selected === key;
-            const amt = budget > 0 ? Math.round(budget * parseInt(key) / 100) : 0;
-            return (
-              <button key={key} type="button" style={pctBtnStyle(active)} onClick={() => pick(key)}>
-                <span style={{ fontSize: 'var(--font-size-md)', fontWeight: 800 }}>{label}</span>
-                {badge && (
-                  <span style={{ fontSize: '10px', color: active ? 'var(--accent)' : 'var(--text-tertiary)', fontWeight: 600 }}>
-                    {badge}
-                  </span>
-                )}
-                {budget > 0 && (
-                  <span className="num" style={{ fontSize: '11px', color: active ? 'var(--accent-dark)' : 'var(--text-tertiary)', fontWeight: 600 }}>
-                    {formatCurrency(amt)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        {/* Percentage chips */}
+        <div style={card}>
+          <div style={chipsRow}>
+            {PCT_OPTIONS.map(({ key, label, badge }) => {
+              const active = selected === key;
+              const amt = budget > 0 ? formatCurrency(Math.round(budget * parseInt(key) / 100)) : null;
+              return (
+                <button key={key} type="button" style={chip(active)} onClick={() => pick(key)}>
+                  <span style={{ fontSize: 'var(--font-size-md)', fontWeight: 800 }}>{label}</span>
+                  {badge && <span style={{ fontSize: '10px', fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text-tertiary)' }}>{badge}</span>}
+                  {amt && <span className="num" style={{ fontSize: '11px', fontWeight: 600, color: active ? 'var(--accent-dark)' : 'var(--text-tertiary)' }}>{amt}</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={secondaryRow}>
+            <button type="button" style={secondaryChip(selected === '0')} onClick={() => pick('0')}>بدون احتياطي</button>
+            <button type="button" style={secondaryChip(selected === 'custom')} onClick={() => pick('custom')}>مبلغ مخصص</button>
+          </div>
         </div>
 
-        {/* Secondary options */}
-        <div style={secondaryRowStyle}>
-          <button type="button" style={secondaryBtnStyle(selected === 'custom')} onClick={() => pick('custom')}>
-            مبلغ مخصص
-          </button>
-          <button type="button" style={secondaryBtnStyle(selected === '0')} onClick={() => pick('0')}>
-            بدون احتياطي
-          </button>
-        </div>
-
-        {/* Custom amount + mode */}
+        {/* Custom fields */}
         {selected === 'custom' && (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
-              <span style={fieldLabelStyle}>مبلغ الاحتياطي</span>
-              <div style={fieldRowStyle}>
-                <span style={prefixStyle}>د.إ</span>
-                <input
-                  type="number"
-                  value={customRaw}
-                  min={0}
-                  placeholder="0"
-                  onChange={e => onCustomRaw(e.target.value)}
-                  style={numInputStyle}
-                  autoFocus
-                />
-              </div>
+          <div style={{ ...card, marginTop: 'var(--space-3)' }}>
+            <label style={fieldLabel}>مبلغ الاحتياطي</label>
+            <div style={amtRow}>
+              <span style={prefix}>د.إ</span>
+              <input type="number" value={customRaw} min={0} placeholder="0" onChange={e => onCustomRaw(e.target.value)} style={numInput} autoFocus />
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <span style={fieldLabelStyle}>طريقة حساب الاحتياطي</span>
-              {MODE_OPTIONS.map(({ key: m, label, desc }) => {
-                const active = customMode === m;
-                return (
-                  <button key={m} type="button" style={modeBtnStyle(active)} onClick={() => onCustomMode(m)}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: '3px' }}>
-                      <div style={radioStyle(active)} />
-                      <span style={{ fontWeight: 700, fontSize: 'var(--font-size-sm)', color: active ? 'var(--accent)' : 'var(--text-primary)' }}>
-                        {label}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0, paddingInlineStart: '22px' }}>
-                      {desc}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
+            <p style={fieldLabel2}>طريقة الحساب</p>
+            {MODE_OPTIONS.map(({ key: m, label, desc }) => {
+              const active = customMode === m;
+              return (
+                <button key={m} type="button" style={modeBtn(active)} onClick={() => onCustomMode(m)}>
+                  <span style={radioCircle(active)} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', fontWeight: 700, color: active ? 'var(--accent)' : 'var(--text-primary)' }}>{label}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{desc}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
 
         {/* Preview */}
         {showPreview && (
-          <div style={previewCardStyle}>
-            <Row label="الميزانية الإجمالية" value={formatCurrency(budget)} />
-            <Row
-              label={deducted ? 'احتياطي الطوارئ' : 'احتياطي إضافي'}
-              value={deducted ? `− ${formatCurrency(value)}` : formatCurrency(value)}
-              color="var(--warning)"
+          <div style={{ ...card, marginTop: 'var(--space-3)' }}>
+            <PreviewRow label="الميزانية الإجمالية" val={formatCurrency(budget)} />
+            <PreviewRow
+              label={deducted ? 'الاحتياطي (مخصوم)' : 'الاحتياطي (إضافي)'}
+              val={`${deducted ? '−' : '+'} ${formatCurrency(value)}`}
+              valColor="var(--warning)"
             />
-            <div style={{ height: '1px', background: 'var(--border-light)', margin: '4px 0' }} />
-            <Row
-              label="المتاح للخطة"
-              value={formatCurrency(deducted ? Math.max(0, budget - value) : budget)}
-              color="var(--accent)"
-              bold
-            />
+            <div style={{ height: '1px', background: 'var(--border-light)', margin: 'var(--space-2) 0' }} />
+            <PreviewRow label="المتاح للخطة" val={formatCurrency(deducted ? Math.max(0, budget - value) : budget)} valColor="var(--accent)" bold />
           </div>
         )}
       </div>
 
-      <div style={footerStyle}>
-        <Button variant="primary" size="lg" fullWidth onClick={onNext}>
-          التالي
-        </Button>
+      <div style={footer}>
+        <Button variant="primary" size="lg" fullWidth onClick={onNext}>التالي</Button>
       </div>
     </div>
   );
 }
 
-function Row({ label, value, color, bold }: { label: string; value: string; color?: string; bold?: boolean }) {
+function PreviewRow({ label, val, valColor, bold }: { label: string; val: string; valColor?: string; bold?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontSize: 'var(--font-size-sm)', color: bold ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: bold ? 700 : 400 }}>
-        {label}
-      </span>
-      <span className="num" style={{ fontSize: 'var(--font-size-sm)', fontWeight: bold ? 800 : 700, color: color ?? 'var(--text-primary)' }}>
-        {value}
-      </span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0' }}>
+      <span style={{ fontSize: 'var(--font-size-sm)', color: bold ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: bold ? 700 : 400 }}>{label}</span>
+      <span className="num" style={{ fontSize: 'var(--font-size-sm)', fontWeight: bold ? 800 : 600, color: valColor ?? 'var(--text-primary)' }}>{val}</span>
     </div>
   );
 }
 
-const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' };
-const iconRingStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '68px', height: '68px', borderRadius: 'var(--radius-full)', background: 'var(--accent-light)', boxShadow: '0 4px 16px rgba(201,147,104,0.2)', flexShrink: 0 };
-const contentStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'var(--space-4)', gap: 'var(--space-4)', overflowY: 'auto' };
-const titleStyle: React.CSSProperties = { fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--text-primary)', textAlign: 'center', margin: 0 };
-const subtitleStyle: React.CSSProperties = { fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.7, margin: 0 };
-const pctRowStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-2)', width: '100%' };
+const screen: React.CSSProperties = { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' };
+const scroll: React.CSSProperties = { flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-6) var(--space-6) var(--space-4)', display: 'flex', flexDirection: 'column' };
+const footer: React.CSSProperties = { padding: 'var(--space-4) var(--space-6)', paddingBottom: 'calc(var(--space-4) + env(safe-area-inset-bottom, 0px))', flexShrink: 0, borderTop: '1px solid var(--border-light)' };
 
-function pctBtnStyle(active: boolean): React.CSSProperties {
-  return {
-    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
-    padding: 'var(--space-3) var(--space-2)',
-    borderRadius: 'var(--radius-lg)',
-    border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent-light)' : 'var(--bg-card)',
-    color: active ? 'var(--accent)' : 'var(--text-primary)',
-    cursor: 'pointer',
-    transition: 'all var(--transition-fast)',
-    fontFamily: 'var(--font-family)',
-  };
+const stepLabel: React.CSSProperties = { margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.8px' };
+const title: React.CSSProperties = { margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 };
+const subtitle: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', lineHeight: 1.7 };
+const card: React.CSSProperties = { marginTop: 'var(--space-6)', background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-light)', padding: 'var(--space-4)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+
+const chipsRow: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-2)' };
+
+function chip(active: boolean): React.CSSProperties {
+  return { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', padding: 'var(--space-3) var(--space-2)', borderRadius: 'var(--radius-lg)', border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`, background: active ? 'var(--accent-light)' : 'var(--bg-primary)', color: active ? 'var(--accent)' : 'var(--text-primary)', cursor: 'pointer', transition: 'all var(--transition-fast)', fontFamily: 'var(--font-family)', WebkitTapHighlightColor: 'transparent' };
 }
 
-const secondaryRowStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', width: '100%' };
+const secondaryRow: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', marginTop: 'var(--space-2)' };
 
-function secondaryBtnStyle(active: boolean): React.CSSProperties {
-  return {
-    padding: 'var(--space-3)',
-    borderRadius: 'var(--radius-lg)',
-    border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent-light)' : 'transparent',
-    color: active ? 'var(--accent)' : 'var(--text-secondary)',
-    cursor: 'pointer',
-    fontSize: 'var(--font-size-sm)',
-    fontWeight: active ? 700 : 500,
-    transition: 'all var(--transition-fast)',
-    fontFamily: 'var(--font-family)',
-  };
+function secondaryChip(active: boolean): React.CSSProperties {
+  return { padding: 'var(--space-3)', borderRadius: 'var(--radius-lg)', border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`, background: active ? 'var(--accent-light)' : 'transparent', color: active ? 'var(--accent)' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 'var(--font-size-sm)', fontWeight: active ? 700 : 500, transition: 'all var(--transition-fast)', fontFamily: 'var(--font-family)', WebkitTapHighlightColor: 'transparent' };
 }
 
-const fieldLabelStyle: React.CSSProperties = { fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-secondary)' };
-const fieldRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', background: 'var(--bg-card)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' };
-const prefixStyle: React.CSSProperties = { padding: '0 var(--space-3)', fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-light)', alignSelf: 'stretch', display: 'flex', alignItems: 'center', borderInlineEnd: '1px solid var(--border)', flexShrink: 0, userSelect: 'none' };
-const numInputStyle: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) var(--space-4)', direction: 'ltr', width: '100%' };
+const fieldLabel: React.CSSProperties = { fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-secondary)', display: 'block' };
+const fieldLabel2: React.CSSProperties = { margin: 'var(--space-4) 0 var(--space-2)', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-secondary)' };
+const amtRow: React.CSSProperties = { marginTop: '6px', display: 'flex', alignItems: 'center', background: 'var(--bg-primary)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 'var(--space-4)' };
+const prefix: React.CSSProperties = { padding: '0 var(--space-3)', fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-light)', alignSelf: 'stretch', display: 'flex', alignItems: 'center', borderInlineEnd: '1px solid var(--border)', flexShrink: 0, userSelect: 'none' };
+const numInput: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) var(--space-4)', direction: 'ltr', width: '100%' };
 
-function modeBtnStyle(active: boolean): React.CSSProperties {
-  return {
-    width: '100%',
-    textAlign: 'start',
-    padding: 'var(--space-3) var(--space-4)',
-    borderRadius: 'var(--radius-lg)',
-    border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent-light)' : 'var(--bg-card)',
-    cursor: 'pointer',
-    transition: 'all var(--transition-fast)',
-    fontFamily: 'var(--font-family)',
-  };
+function modeBtn(active: boolean): React.CSSProperties {
+  return { width: '100%', textAlign: 'start', padding: 'var(--space-3) var(--space-4)', borderRadius: 'var(--radius-lg)', border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`, background: active ? 'var(--accent-light)' : 'transparent', cursor: 'pointer', transition: 'all var(--transition-fast)', fontFamily: 'var(--font-family)', display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)', marginBottom: 'var(--space-2)', WebkitTapHighlightColor: 'transparent' };
 }
 
-function radioStyle(active: boolean): React.CSSProperties {
-  return {
-    width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0,
-    border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-    background: active ? 'var(--accent)' : 'transparent',
-    boxShadow: active ? 'inset 0 0 0 3px var(--bg-card)' : 'none',
-    transition: 'all var(--transition-fast)',
-  };
+function radioCircle(active: boolean): React.CSSProperties {
+  return { width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0, border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`, background: active ? 'var(--accent)' : 'transparent', boxShadow: active ? 'inset 0 0 0 3px var(--bg-card)' : 'none', transition: 'all var(--transition-fast)', marginTop: '2px' };
 }
-
-const previewCardStyle: React.CSSProperties = { width: '100%', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-light)', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' };
-const footerStyle: React.CSSProperties = { padding: 'var(--space-6) 0 var(--space-4)', flexShrink: 0 };

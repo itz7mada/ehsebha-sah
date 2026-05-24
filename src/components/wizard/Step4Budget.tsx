@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from '../common/Button';
-import { WalletIcon } from '../common/Icons';
 import { parseCurrencyInput, formatCurrency } from '../../utils/formatting';
 
 interface Step4BudgetProps {
@@ -11,6 +10,7 @@ interface Step4BudgetProps {
 
 export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProps) {
   const [rawInput, setRawInput] = React.useState(value > 0 ? String(value) : '');
+  const [focused, setFocused] = React.useState(false);
 
   function handleInputChange(raw: string) {
     setRawInput(raw);
@@ -18,52 +18,57 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
   }
 
   const displayFormatted = value > 0 ? formatCurrency(value) : null;
+  const borderColor = focused ? 'var(--accent)' : 'var(--border)';
+  const ringColor = focused ? '0 0 0 3px var(--accent-light)' : '0 1px 3px rgba(0,0,0,0.05)';
 
   return (
-    <div style={containerStyle}>
-      <div style={contentStyle}>
-        <span style={iconRingStyle}>
-          <WalletIcon size={28} color="var(--accent)" />
-        </span>
-        <h1 style={titleStyle}>كم ميزانيتك الإجمالية؟</h1>
-        <p style={subtitleStyle}>تقريبي، مب لازم يكون دقيق.</p>
+    <div style={screen}>
+      <div style={scroll}>
+        <p style={stepLabel}>الميزانية</p>
+        <h1 style={title}>كم ميزانيتك الإجمالية؟</h1>
+        <p style={subtitle}>حط رقم تقريبي، مب لازم يكون دقيق من البداية.</p>
 
-        <div style={inputBlockStyle}>
-          <label style={labelStyle} htmlFor="budget-input">
-            الميزانية الإجمالية
-          </label>
-          <div style={fieldRowStyle}>
-            <span style={prefixStyle}>د.إ</span>
+        <div style={card}>
+          <label style={fieldLabel} htmlFor="w-budget">الميزانية الإجمالية</label>
+          <div
+            style={{
+              marginTop: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              background: 'var(--bg-primary)',
+              borderRadius: 'var(--radius-lg)',
+              border: `1.5px solid ${borderColor}`,
+              boxShadow: ringColor,
+              overflow: 'hidden',
+              transition: 'border-color 150ms ease, box-shadow 150ms ease',
+            }}
+          >
+            <span style={prefix}>د.إ</span>
             <input
-              id="budget-input"
+              id="w-budget"
               type="number"
               inputMode="numeric"
               value={rawInput}
               min={0}
               placeholder="150000"
               onChange={(e) => handleInputChange(e.target.value)}
-              style={numInputStyle}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              style={numInput}
             />
           </div>
-
           {displayFormatted && (
-            <div style={previewStyle}>
-              <span style={previewLabelStyle}>المبلغ:</span>
-              <span style={previewAmountStyle}>{displayFormatted}</span>
-            </div>
+            <p style={previewText}>
+              <span style={{ color: 'var(--text-tertiary)' }}>المبلغ: </span>
+              <span className="num" style={{ fontWeight: 700, color: 'var(--accent)' }}>{displayFormatted}</span>
+            </p>
           )}
+          <p style={hint}>تقدر تعدل الرقم لاحقاً من الإعدادات.</p>
         </div>
-
-        <p style={hintStyle}>لا تشيل هم، تقدر تعدلها لاحقاً.</p>
       </div>
 
-      <div style={footerStyle}>
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          onClick={onNext}
-        >
+      <div style={footer}>
+        <Button variant="primary" size="lg" fullWidth onClick={onNext}>
           التالي
         </Button>
       </div>
@@ -71,126 +76,17 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
   );
 }
 
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  justifyContent: 'space-between',
-};
+const screen: React.CSSProperties = { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' };
+const scroll: React.CSSProperties = { flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-6) var(--space-6) var(--space-4)', display: 'flex', flexDirection: 'column' };
+const footer: React.CSSProperties = { padding: 'var(--space-4) var(--space-6)', paddingBottom: 'calc(var(--space-4) + env(safe-area-inset-bottom, 0px))', flexShrink: 0, borderTop: '1px solid var(--border-light)' };
 
-const contentStyle: React.CSSProperties = {
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingTop: 'var(--space-6)',
-};
+const stepLabel: React.CSSProperties = { margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.8px' };
+const title: React.CSSProperties = { margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 };
+const subtitle: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', lineHeight: 1.7 };
+const card: React.CSSProperties = { marginTop: 'var(--space-6)', background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-light)', padding: 'var(--space-5)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+const fieldLabel: React.CSSProperties = { fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-secondary)' };
 
-const iconRingStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '68px',
-  height: '68px',
-  borderRadius: 'var(--radius-full)',
-  background: 'var(--accent-light)',
-  boxShadow: '0 4px 16px rgba(201,147,104,0.2)',
-  marginBottom: 'var(--space-5)',
-};
-
-const titleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-xl)',
-  fontWeight: 800,
-  color: 'var(--text-primary)',
-  marginBottom: 'var(--space-2)',
-  textAlign: 'center',
-  lineHeight: 1.4,
-};
-
-const subtitleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-base)',
-  color: 'var(--text-secondary)',
-  marginBottom: 'var(--space-6)',
-  textAlign: 'center',
-};
-
-const inputBlockStyle: React.CSSProperties = {
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--space-2)',
-  marginBottom: 'var(--space-4)',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  fontWeight: 600,
-  color: 'var(--text-secondary)',
-};
-
-const fieldRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  background: 'var(--bg-card)',
-  border: '1.5px solid var(--border)',
-  borderRadius: 'var(--radius-lg)',
-  boxShadow: 'var(--shadow-sm)',
-  overflow: 'hidden',
-};
-
-const prefixStyle: React.CSSProperties = {
-  padding: '0 var(--space-3)',
-  fontSize: 'var(--font-size-base)',
-  fontWeight: 700,
-  color: 'var(--accent)',
-  background: 'var(--accent-light)',
-  alignSelf: 'stretch',
-  display: 'flex',
-  alignItems: 'center',
-  borderInlineEnd: '1px solid var(--border)',
-  flexShrink: 0,
-  userSelect: 'none',
-};
-
-const numInputStyle: React.CSSProperties = {
-  flex: 1,
-  border: 'none',
-  outline: 'none',
-  background: 'transparent',
-  fontSize: '16px',
-  fontWeight: 700,
-  color: 'var(--text-primary)',
-  fontFamily: 'var(--font-family)',
-  padding: 'var(--space-3) var(--space-4)',
-  direction: 'ltr',
-  width: '100%',
-};
-
-const previewStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--space-2)',
-  paddingInlineStart: 'var(--space-1)',
-};
-
-const previewLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-};
-
-const previewAmountStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  fontWeight: 700,
-  color: 'var(--accent)',
-};
-
-const hintStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-  textAlign: 'center',
-};
-
-const footerStyle: React.CSSProperties = {
-  padding: 'var(--space-6) 0 var(--space-4)',
-};
+const prefix: React.CSSProperties = { padding: '0 var(--space-3)', fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-light)', alignSelf: 'stretch', display: 'flex', alignItems: 'center', borderInlineEnd: '1px solid var(--border)', flexShrink: 0, userSelect: 'none' };
+const numInput: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) var(--space-4)', direction: 'ltr', width: '100%' };
+const previewText: React.CSSProperties = { margin: 'var(--space-3) 0 0', fontSize: 'var(--font-size-sm)' };
+const hint: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.5 };

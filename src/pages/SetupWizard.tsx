@@ -6,7 +6,7 @@ import { generateId, now } from '../utils/formatting';
 import { DEFAULT_CATEGORIES } from '../types';
 import type { Settings, Category, SupportItem, JourneyEvent, HousingSituation } from '../types';
 
-import { ChevronRightIcon } from '../components/common/Icons';
+import { OnboardingShell } from '../components/wizard/OnboardingShell';
 import Step1Name from '../components/wizard/Step1Name';
 import Step2Welcome from '../components/wizard/Step2Welcome';
 import Step3Date from '../components/wizard/Step3Date';
@@ -141,203 +141,70 @@ export default function SetupWizard() {
     }
   }
 
-  const progressPercent = ((step - 1) / (TOTAL_STEPS - 1)) * 100;
-
   return (
-    <div style={rootStyle}>
-      <div style={innerStyle}>
-        {/* Top nav row */}
-        <div style={topNavStyle}>
-          {step > 1 ? (
-            <button type="button" style={backBtnStyle} onClick={handleBack} aria-label="رجوع للخطوة السابقة">
-              <ChevronRightIcon size={20} color="var(--text-secondary)" />
-            </button>
-          ) : (
-            <div style={{ width: '36px', flexShrink: 0 }} />
-          )}
-          <span style={{ direction: 'ltr', display: 'inline-flex', alignItems: 'baseline', gap: '1px' }}>
-            <span style={stepNumStyle}>{step}</span>
-            <span style={stepOfStyle}> / {TOTAL_STEPS}</span>
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        <div style={progressBarTrackStyle}>
-          <div style={{ ...progressBarFillStyle, width: `${progressPercent}%` }} />
-        </div>
-
-        {/* Step content with fade animation */}
-        <div
-          style={{
-            ...stepWrapStyle,
-            opacity: animating ? 0 : 1,
-            transform: animating ? 'translateY(8px)' : 'translateY(0)',
+    <OnboardingShell step={step} totalSteps={TOTAL_STEPS} onBack={handleBack} animating={animating}>
+      {step === 1 && (
+        <Step1Name value={data.name} onChange={(v) => patch('name', v)} onNext={handleNext} />
+      )}
+      {step === 2 && (
+        <Step2Welcome name={data.name} onNext={handleNext} />
+      )}
+      {step === 3 && (
+        <Step3Date value={data.weddingDate} onChange={(v) => patch('weddingDate', v)} onNext={handleNext} />
+      )}
+      {step === 4 && (
+        <Step4Budget value={data.budget} onChange={(v) => patch('budget', v)} onNext={handleNext} />
+      )}
+      {step === 5 && (
+        <Step5Emergency
+          budget={data.budget}
+          value={data.emergencyReserve}
+          mode={data.emergencyReserveMode}
+          onChange={(amount, mode) => {
+            patch('emergencyReserve', amount);
+            patch('emergencyReserveMode', mode);
           }}
-        >
-          {step === 1 && (
-            <Step1Name
-              value={data.name}
-              onChange={(v) => patch('name', v)}
-              onNext={handleNext}
-            />
-          )}
-          {step === 2 && (
-            <Step2Welcome
-              name={data.name}
-              onNext={handleNext}
-            />
-          )}
-          {step === 3 && (
-            <Step3Date
-              value={data.weddingDate}
-              onChange={(v) => patch('weddingDate', v)}
-              onNext={handleNext}
-            />
-          )}
-          {step === 4 && (
-            <Step4Budget
-              value={data.budget}
-              onChange={(v) => patch('budget', v)}
-              onNext={handleNext}
-            />
-          )}
-          {step === 5 && (
-            <Step5Emergency
-              budget={data.budget}
-              value={data.emergencyReserve}
-              mode={data.emergencyReserveMode}
-              onChange={(amount, mode) => {
-                patch('emergencyReserve', amount);
-                patch('emergencyReserveMode', mode);
-              }}
-              onNext={handleNext}
-            />
-          )}
-          {step === 6 && (
-            <Step6Support
-              choice={data.supportChoice}
-              onChoiceChange={(c) => patch('supportChoice', c)}
-              items={data.supportItems}
-              onItemsChange={(items) => patch('supportItems', items)}
-              onNext={handleNext}
-            />
-          )}
-          {step === 7 && (
-            <Step7Housing
-              value={data.housingSituation}
-              onChange={(v) => patch('housingSituation', v)}
-              onNext={handleNext}
-            />
-          )}
-          {step === 8 && (
-            <Step8Categories
-              selected={data.selectedCategories}
-              onToggle={toggleCategory}
-              onComplete={handleComplete}
-              loading={saving}
-            />
-          )}
-        </div>
+          onNext={handleNext}
+        />
+      )}
+      {step === 6 && (
+        <Step6Support
+          choice={data.supportChoice}
+          onChoiceChange={(c) => patch('supportChoice', c)}
+          items={data.supportItems}
+          onItemsChange={(items) => patch('supportItems', items)}
+          onNext={handleNext}
+        />
+      )}
+      {step === 7 && (
+        <Step7Housing
+          value={data.housingSituation}
+          onChange={(v) => patch('housingSituation', v)}
+          onNext={handleNext}
+        />
+      )}
+      {step === 8 && (
+        <Step8Categories
+          selected={data.selectedCategories}
+          onToggle={toggleCategory}
+          onComplete={handleComplete}
+          loading={saving}
+        />
+      )}
 
-        {/* Error message */}
-        {error && (
-          <div style={errorBannerStyle}>
-            <span>⚠️ {error}</span>
-            <button type="button" style={errorDismissStyle} onClick={() => setError(null)}>
-              ✕
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      {error && (
+        <div style={errorBannerStyle}>
+          <span>⚠️ {error}</span>
+          <button type="button" style={errorDismissStyle} onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
+    </OnboardingShell>
   );
 }
 
-const rootStyle: React.CSSProperties = {
-  minHeight: '100dvh',
-  background: 'var(--bg-primary)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'flex-start',
-  direction: 'rtl',
-};
-
-const innerStyle: React.CSSProperties = {
-  width: '100%',
-  maxWidth: '420px',
-  minHeight: '100dvh',
-  display: 'flex',
-  flexDirection: 'column',
-  padding: '0 var(--space-6)',
-  paddingTop: 0,
-  paddingBottom: 'calc(var(--space-6) + var(--safe-bottom))',
-  boxSizing: 'border-box',
-  position: 'relative',
-};
-
-const topNavStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingTop: 'calc(env(safe-area-inset-top, 0px) + var(--space-3))',
-  marginBottom: 'var(--space-3)',
-  direction: 'ltr',
-};
-
-const backBtnStyle: React.CSSProperties = {
-  width: '36px',
-  height: '36px',
-  borderRadius: 'var(--radius-full)',
-  background: 'var(--bg-secondary)',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  WebkitTapHighlightColor: 'transparent',
-  color: 'var(--text-secondary)',
-};
-
-const progressBarTrackStyle: React.CSSProperties = {
-  width: '100%',
-  height: '4px',
-  background: 'var(--border)',
-  borderRadius: 'var(--radius-full)',
-  overflow: 'hidden',
-  marginBottom: 'var(--space-3)',
-};
-
-const progressBarFillStyle: React.CSSProperties = {
-  height: '100%',
-  background: 'var(--accent)',
-  borderRadius: 'var(--radius-full)',
-  transition: 'width 400ms cubic-bezier(0.4,0,0.2,1)',
-};
-
-
-const stepNumStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  fontWeight: 700,
-  color: 'var(--accent)',
-};
-
-const stepOfStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-};
-
-const stepWrapStyle: React.CSSProperties = {
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'opacity 180ms ease, transform 180ms ease',
-};
-
 const errorBannerStyle: React.CSSProperties = {
   position: 'fixed',
-  bottom: 'calc(var(--space-8) + var(--safe-bottom))',
+  bottom: 'calc(var(--space-8) + env(safe-area-inset-bottom, 0px))',
   right: '50%',
   transform: 'translateX(50%)',
   background: 'var(--danger)',
@@ -353,6 +220,7 @@ const errorBannerStyle: React.CSSProperties = {
   zIndex: 100,
   maxWidth: '340px',
   width: 'calc(100% - var(--space-8))',
+  fontFamily: 'var(--font-family)',
 };
 
 const errorDismissStyle: React.CSSProperties = {

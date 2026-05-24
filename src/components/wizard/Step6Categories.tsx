@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from '../common/Button';
-import { GridIcon } from '../common/Icons';
 import { DEFAULT_CATEGORIES } from '../../types';
 
 interface Step6CategoriesProps {
@@ -10,66 +9,47 @@ interface Step6CategoriesProps {
   loading?: boolean;
 }
 
-export default function Step6Categories({
-  selected,
-  onToggle,
-  onComplete,
-  loading = false,
-}: Step6CategoriesProps) {
+export default function Step6Categories({ selected, onToggle, onComplete, loading = false }: Step6CategoriesProps) {
   return (
-    <div style={containerStyle}>
-      <div style={scrollAreaStyle}>
-        <span style={iconRingStyle}>
-          <GridIcon size={26} color="var(--accent)" />
-        </span>
-        <h1 style={titleStyle}>شو تبغي نرتب في خطتك؟</h1>
-        <p style={subtitleStyle}>اختار اللي يناسبك، وتقدر تضيف أو تحذف لاحقاً.</p>
+    <div style={screen}>
+      <div style={scroll}>
+        <p style={stepLabel}>خطة الزواج</p>
+        <h1 style={title}>شو تبغي نرتب في خطتك؟</h1>
+        <p style={subtitle}>اختار اللي يناسبك، وتقدر تضيف أو تحذف لاحقاً.</p>
 
-        <div style={gridStyle}>
+        <div style={grid}>
           {DEFAULT_CATEGORIES.map((cat) => {
             const isSelected = selected.includes(cat.name);
             return (
               <button
                 key={cat.name}
                 type="button"
-                style={{
-                  ...cardStyle,
-                  ...(isSelected ? cardActiveStyle : cardInactiveStyle),
-                }}
+                style={catCard(isSelected)}
                 onClick={() => onToggle(cat.name)}
                 aria-pressed={isSelected}
               >
-                <span style={emojiStyle}>{cat.emoji}</span>
-                <span style={{
-                  ...cardLabelStyle,
-                  color: isSelected ? 'var(--accent)' : 'var(--text-primary)',
-                }}>
+                <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: isSelected ? 'var(--accent)' : 'var(--text-primary)', textAlign: 'center', lineHeight: 1.4 }}>
                   {cat.name}
                 </span>
                 {isSelected && (
-                  <span style={checkBadgeStyle}>✓</span>
+                  <span style={checkBadge}>
+                    <svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </span>
                 )}
               </button>
             );
           })}
         </div>
 
-        <p style={selectedCountStyle}>
+        <p style={countNote}>
           {selected.length === 0
             ? 'لم تختر أي شيء بعد'
             : `اخترت ${selected.length} من ${DEFAULT_CATEGORIES.length}`}
         </p>
       </div>
 
-      <div style={footerStyle}>
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          loading={loading}
-          disabled={loading}
-          onClick={onComplete}
-        >
+      <div style={footer}>
+        <Button variant="primary" size="lg" fullWidth loading={loading} disabled={loading} onClick={onComplete}>
           {loading ? '' : 'ابدأ الخطة'}
         </Button>
       </div>
@@ -77,116 +57,19 @@ export default function Step6Categories({
   );
 }
 
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-};
+const screen: React.CSSProperties = { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' };
+const scroll: React.CSSProperties = { flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-6) var(--space-6) var(--space-4)', display: 'flex', flexDirection: 'column' };
+const footer: React.CSSProperties = { padding: 'var(--space-4) var(--space-6)', paddingBottom: 'calc(var(--space-4) + env(safe-area-inset-bottom, 0px))', flexShrink: 0, borderTop: '1px solid var(--border-light)' };
 
-const scrollAreaStyle: React.CSSProperties = {
-  flex: 1,
-  overflowY: 'auto',
-  paddingBottom: 'var(--space-4)',
-};
+const stepLabel: React.CSSProperties = { margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.8px' };
+const title: React.CSSProperties = { margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 };
+const subtitle: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', lineHeight: 1.7 };
 
-const iconRingStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '60px',
-  height: '60px',
-  borderRadius: 'var(--radius-full)',
-  background: 'var(--accent-light)',
-  boxShadow: '0 4px 12px rgba(201,147,104,0.18)',
-  marginBottom: 'var(--space-4)',
-};
+const grid: React.CSSProperties = { marginTop: 'var(--space-6)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' };
 
-const titleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-xl)',
-  fontWeight: 800,
-  color: 'var(--text-primary)',
-  marginBottom: 'var(--space-2)',
-  lineHeight: 1.4,
-};
+function catCard(isSelected: boolean): React.CSSProperties {
+  return { position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-5) var(--space-3)', borderRadius: 'var(--radius-xl)', border: `1.5px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`, background: isSelected ? 'var(--accent-light)' : 'var(--bg-card)', cursor: 'pointer', transition: 'all var(--transition-fast)', fontFamily: 'var(--font-family)', minHeight: '72px', WebkitTapHighlightColor: 'transparent', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' };
+}
 
-const subtitleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-secondary)',
-  marginBottom: 'var(--space-6)',
-};
-
-const gridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
-  gap: 'var(--space-3)',
-  marginBottom: 'var(--space-4)',
-};
-
-const cardStyle: React.CSSProperties = {
-  position: 'relative',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 'var(--space-2)',
-  padding: 'var(--space-5) var(--space-3)',
-  borderRadius: 'var(--radius-xl)',
-  border: '2px solid',
-  cursor: 'pointer',
-  transition: 'all var(--transition-fast)',
-  fontFamily: 'var(--font-family)',
-  minHeight: '96px',
-  WebkitTapHighlightColor: 'transparent',
-};
-
-const cardActiveStyle: React.CSSProperties = {
-  background: 'var(--accent-light)',
-  borderColor: 'var(--accent)',
-  boxShadow: '0 0 0 1px var(--accent)',
-};
-
-const cardInactiveStyle: React.CSSProperties = {
-  background: 'var(--bg-card)',
-  borderColor: 'var(--border)',
-  boxShadow: 'var(--shadow-sm)',
-};
-
-const emojiStyle: React.CSSProperties = {
-  fontSize: '32px',
-  lineHeight: 1,
-};
-
-const cardLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  fontWeight: 700,
-  textAlign: 'center',
-  transition: 'color var(--transition-fast)',
-};
-
-const checkBadgeStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: 'var(--space-2)',
-  insetInlineEnd: 'var(--space-2)',
-  width: '20px',
-  height: '20px',
-  borderRadius: 'var(--radius-full)',
-  background: 'var(--accent)',
-  color: 'var(--text-inverse)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '11px',
-  fontWeight: 800,
-};
-
-const selectedCountStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-  textAlign: 'center',
-  marginTop: 'var(--space-2)',
-};
-
-const footerStyle: React.CSSProperties = {
-  padding: 'var(--space-6) 0 var(--space-4)',
-  flexShrink: 0,
-};
+const checkBadge: React.CSSProperties = { position: 'absolute', top: '8px', insetInlineEnd: '8px', width: '18px', height: '18px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+const countNote: React.CSSProperties = { margin: 'var(--space-4) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', textAlign: 'center' };
