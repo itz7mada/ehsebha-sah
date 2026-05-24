@@ -57,10 +57,41 @@ export function validateBackupFile(data: unknown): data is BackupData {
   if (!Array.isArray(d.expenses)) return false;
   if (!Array.isArray(d.support)) return false;
   if (!Array.isArray(d.journey)) return false;
+
+  // Array length limits
+  if (d.categories.length > 50) return false;
+  if (d.expenses.length > 500) return false;
+  if (d.support.length > 100) return false;
+  if (d.journey.length > 2000) return false;
+
   const s = d.settings as Record<string, unknown>;
   if (s.id !== 'settings') return false;
-  if (typeof s.name !== 'string') return false;
+  if (typeof s.name !== 'string' || s.name.length > 100) return false;
   if (typeof s.budget !== 'number') return false;
+
+  // Category string limits
+  for (const cat of d.categories) {
+    if (!cat || typeof cat !== 'object') return false;
+    const c = cat as Record<string, unknown>;
+    if (typeof c.name !== 'string' || c.name.length > 80) return false;
+  }
+
+  // Expense string limits
+  for (const exp of d.expenses) {
+    if (!exp || typeof exp !== 'object') return false;
+    const e = exp as Record<string, unknown>;
+    if (typeof e.name !== 'string' || e.name.length > 300) return false;
+    if (e.notes !== undefined && (typeof e.notes !== 'string' || e.notes.length > 300)) return false;
+    if (e.images !== undefined && (!Array.isArray(e.images) || e.images.length > 3)) return false;
+  }
+
+  // Support entry string limits
+  for (const sup of d.support) {
+    if (!sup || typeof sup !== 'object') return false;
+    const su = sup as Record<string, unknown>;
+    if (typeof su.name !== 'string' || su.name.length > 100) return false;
+  }
+
   return true;
 }
 

@@ -86,10 +86,15 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
     return Object.keys(errs).length === 0;
   };
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB
+
   async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || images.length >= MAX_IMAGES) return;
     e.target.value = '';
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) return;
+    if (file.size > MAX_IMAGE_BYTES) return;
     try {
       const compressed = await compressImage(file);
       setImages(prev => [...prev, compressed]);
@@ -296,7 +301,7 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
           <input
             ref={imageInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             style={{ display: 'none' }}
             onChange={handleImageChange}
           />

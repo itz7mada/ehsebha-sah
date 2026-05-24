@@ -167,6 +167,10 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
+    if (file.size > 5 * 1024 * 1024) {
+      setImportMsg({ text: 'حجم الملف كبير جداً. الحد الأقصى 5 ميغابايت.', ok: false });
+      return;
+    }
     try {
       const text = await file.text();
       const data = JSON.parse(text);
