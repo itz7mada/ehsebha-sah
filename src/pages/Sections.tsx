@@ -13,6 +13,11 @@ import type { Category } from '../types';
 
 const EMOJI_OPTIONS = ['💍', '✨', '👗', '🎊', '🏠', '🌙', '🛡️', '📋', '💼', '🎁', '🎂', '🚗', '✈️', '🏥', '🎓', '📸', '🎵', '🌹', '🎀', '🌺'];
 
+const CAT_COLORS = [
+  '#C99368', '#4CAF82', '#5B9BD5', '#9B7ED8',
+  '#C8657A', '#8B6548', '#5BBDAA', '#8A8F98',
+];
+
 export function Sections() {
   const navigate = useNavigate();
   const { state, dispatch } = useApp();
@@ -20,6 +25,7 @@ export function Sections() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newEmoji, setNewEmoji] = useState('📋');
+  const [newColor, setNewColor] = useState(CAT_COLORS[0]);
   const [nameError, setNameError] = useState('');
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
@@ -31,6 +37,7 @@ export function Sections() {
   const openSheet = () => {
     setNewName('');
     setNewEmoji('📋');
+    setNewColor(CAT_COLORS[activeCategories.length % CAT_COLORS.length]);
     setNameError('');
     setSheetOpen(true);
   };
@@ -47,6 +54,7 @@ export function Sections() {
         id: generateId(),
         name: newName.trim(),
         emoji: newEmoji,
+        color: newColor,
         isActive: true,
         order: maxOrder + 1,
         isSystem: false,
@@ -206,6 +214,10 @@ export function Sections() {
       {/* Add Category Sheet */}
       <BottomSheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} title="إضافة بند رئيسي">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingBottom: 'var(--space-6)' }}>
+          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.6 }}>
+            أضف جزء من خطة الزواج يناسبك.
+          </p>
+
           <Input
             label="الاسم"
             value={newName}
@@ -214,6 +226,33 @@ export function Sections() {
             error={nameError}
             autoFocus
           />
+
+          <div>
+            <span style={sheetLabelStyle}>اللون</span>
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', marginTop: 'var(--space-1)' }}>
+              {CAT_COLORS.map(color => (
+                <button
+                  key={color}
+                  type="button"
+                  aria-label={color}
+                  aria-pressed={newColor === color}
+                  onClick={() => setNewColor(color)}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: '50%',
+                    background: color,
+                    border: newColor === color ? '3px solid var(--text-primary)' : '3px solid transparent',
+                    cursor: 'pointer',
+                    outline: newColor === color ? `2px solid ${color}` : 'none',
+                    outlineOffset: '2px',
+                    transition: 'all var(--transition-fast)',
+                    flexShrink: 0,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
 
           <div>
             <span style={sheetLabelStyle}>اختر رمزاً</span>
@@ -241,9 +280,10 @@ export function Sections() {
             alignItems: 'center',
             gap: 'var(--space-3)',
           }}>
-            <span style={{ fontSize: '28px' }}>{newEmoji}</span>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: newColor, flexShrink: 0 }} />
+            <span style={{ fontSize: '22px' }}>{newEmoji}</span>
             <span style={{ fontWeight: 700, color: newName.trim() ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-              {newName.trim() || 'اسم القسم'}
+              {newName.trim() || 'اسم البند'}
             </span>
           </div>
 

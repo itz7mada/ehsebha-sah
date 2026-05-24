@@ -12,7 +12,7 @@ type TransactionKind = 'scheduled' | 'partial' | 'paid';
 const KIND_LABELS: Record<TransactionKind, string> = {
   scheduled: 'مجدول',
   partial: 'جزئي',
-  paid: 'مدفوع',
+  paid: 'كامل',
 };
 
 const KINDS: TransactionKind[] = ['scheduled', 'partial', 'paid'];
@@ -207,18 +207,24 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
           disabled={!canSave || saving}
           onClick={handleSave}
         >
-          {editItem ? 'حفظ التعديلات' : 'إضافة'}
+          {editItem ? 'حفظ التعديلات' : 'إضافة العنصر'}
         </Button>
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
 
-        {/* 1. الوصف */}
+        {!editItem && (
+          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.6 }}>
+            اكتب الشي اللي تبغي ترتبه، وحدد له مبلغ تقريبي.
+          </p>
+        )}
+
+        {/* 1. اسم العنصر */}
         <Input
-          label="الوصف"
+          label="اسم العنصر"
           value={name}
           onChange={setName}
-          placeholder="مثال: دفعة القاعة"
+          placeholder="مثال: التصوير أو القاعة"
           error={errors.name}
           autoFocus={!editItem}
         />
@@ -289,7 +295,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
 
         {/* 6. صورة */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={labelStyle}>صورة (اختياري)</span>
+          <span style={labelStyle}>إيصال أو صورة (اختياري)</span>
           {imageData ? (
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <img
@@ -358,7 +364,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
           label="ملاحظة (اختياري)"
           value={notes}
           onChange={setNotes}
-          placeholder="أي ملاحظات..."
+          placeholder="أي تفاصيل بسيطة تبي تتذكرها لاحقاً"
           multiline
           rows={2}
         />

@@ -22,12 +22,12 @@ const FILTERS: { key: FilterTab; label: string }[] = [
 ];
 
 const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
-  'المهر': ['خاتم الخطوبة', 'مهر السيدة', 'المبرم'],
-  'الزهبة': ['ذهب العروس', 'سوار', 'مصوغات'],
-  'الملجة': ['فستان الزفاف', 'لبس العريس', 'عباءة العروس', 'حذاء العروس'],
-  'العرس': ['قاعة الرجال', 'قاعة الحريم', 'الذبايح', 'العشاء', 'ديكور القاعة', 'الموسيقى'],
-  'السكن': ['إيجار الشقة', 'أثاث غرفة النوم', 'أثاث المطبخ', 'أجهزة منزلية'],
-  'شهر العسل': ['تذاكر طيران', 'إقامة الفندق', 'رحلات وجولات'],
+  'المهر': ['الذهب', 'الشبكة', 'دفعة المهر', 'الهدايا'],
+  'الزهبة': ['ذهب العروس', 'السوار', 'الخاتم', 'المصوغات'],
+  'الملجة': ['لبس العريس', 'لبس العروس', 'عباءة العروس', 'الحذاء'],
+  'العرس': ['القاعة', 'الضيافة', 'التصوير', 'الذبايح', 'الدي جي'],
+  'السكن': ['الإيجار', 'الأثاث الأساسي', 'المطبخ', 'الأجهزة الكهربائية'],
+  'شهر العسل': ['التذاكر', 'الفندق', 'المواصلات', 'المصروف اليومي'],
   'أخرى': ['مصاريف متنوعة'],
 };
 
@@ -79,6 +79,13 @@ function ChecklistRow({
 }) {
   const [expanded, setExpanded] = useState(false);
 
+  const statusText = item.status === 'paid' ? 'مكتمل'
+    : item.status === 'partial' ? `دُفع ${formatCurrency(item.paidAmount)}`
+    : 'لم يبدأ بعد';
+  const statusColor = item.status === 'paid' ? 'var(--success)'
+    : item.status === 'partial' ? 'var(--warning)'
+    : 'var(--text-tertiary)';
+
   return (
     <div style={rowWrapStyle}>
       <button
@@ -97,6 +104,9 @@ function ChecklistRow({
           }}>
             {item.name}
           </span>
+          <span style={{ fontSize: '11px', color: statusColor, fontWeight: 500 }}>
+            {statusText}
+          </span>
         </div>
         <div style={rowAmountStyle}>
           <span className="num" style={{
@@ -106,33 +116,65 @@ function ChecklistRow({
           }}>
             {formatCurrency(item.expectedAmount)}
           </span>
-          {item.paidAmount > 0 && item.paidAmount < item.expectedAmount && (
-            <span className="num" style={{ fontSize: '11px', color: 'var(--warning)', fontWeight: 500 }}>
-              دُفع {formatCurrency(item.paidAmount)}
-            </span>
-          )}
         </div>
       </button>
 
       {expanded && (
-        <div style={rowActionsStyle}>
-          <button
-            type="button"
-            style={actionBtnStyle('var(--accent)')}
-            onClick={() => { setExpanded(false); onEdit(item); }}
-          >
-            <EditIcon size={14} />
-            <span>تعديل</span>
-          </button>
-          <button
-            type="button"
-            style={actionBtnStyle('var(--danger)')}
-            onClick={() => { setExpanded(false); onDelete(item.id); }}
-          >
-            <TrashIcon size={14} />
-            <span>حذف</span>
-          </button>
-        </div>
+        <>
+          {item.paidAmount > 0 && (
+            <div style={{
+              padding: 'var(--space-3) var(--space-4)',
+              background: 'var(--bg-secondary)',
+              borderTop: '1px solid var(--border-light)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-5)',
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 500 }}>المدفوع</span>
+                <span className="num" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--success)' }}>
+                  {formatCurrency(item.paidAmount)}
+                </span>
+              </div>
+              {item.dueDate && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 500 }}>التاريخ</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                    {new Date(item.dueDate).toLocaleDateString('ar', { month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+              )}
+              {item.imageData && (
+                <div style={{ marginRight: 'auto', width: '38px', height: '38px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-light)', flexShrink: 0 }}>
+                  <img src={item.imageData} alt="إيصال" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
+            </div>
+          )}
+          {item.notes && (
+            <div style={{ padding: 'var(--space-2) var(--space-4)', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-light)' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.6 }}>{item.notes}</p>
+            </div>
+          )}
+          <div style={rowActionsStyle}>
+            <button
+              type="button"
+              style={actionBtnStyle('var(--accent)')}
+              onClick={() => { setExpanded(false); onEdit(item); }}
+            >
+              <EditIcon size={14} />
+              <span>تعديل</span>
+            </button>
+            <button
+              type="button"
+              style={actionBtnStyle('var(--danger)')}
+              onClick={() => { setExpanded(false); onDelete(item.id); }}
+            >
+              <TrashIcon size={14} />
+              <span>حذف</span>
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
@@ -364,8 +406,8 @@ export function SectionDetail() {
         {/* Checklist items */}
         {filtered.length === 0 && !showSuggestions && (
           <div className="empty-state">
-            <h3>لا توجد عناصر بعد</h3>
-            <p>أضف أول عنصر في هذا البند الرئيسي</p>
+            <h3>لم تضف عناصر بعد</h3>
+            <p>ابدأ بأول شيء يناسبك في هذا البند</p>
             <div style={{ marginTop: 'var(--space-5)' }}>
               <Button variant="primary" icon={<PlusIcon size={16} />} onClick={() => handleAddNew()}>
                 إضافة عنصر
@@ -396,26 +438,18 @@ export function SectionDetail() {
         {/* Suggested items when empty */}
         {showSuggestions && (
           <div style={{ marginTop: 'var(--space-4)' }}>
-            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 'var(--space-2)', letterSpacing: '0.04em' }}>
+            <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 'var(--space-3)', letterSpacing: '0.04em' }}>
               اقتراحات للبدء
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
               {suggestions.map(name => (
                 <button
                   key={name}
                   type="button"
-                  style={suggestionRowStyle}
+                  style={suggestionChipStyle}
                   onClick={() => handleAddNew(name)}
                 >
-                  <div style={{
-                    width: 24, height: 24, borderRadius: '50%',
-                    border: '2px solid var(--border-light)',
-                    flexShrink: 0,
-                  }} />
-                  <span style={{ flex: 1, fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', textAlign: 'start' }}>
-                    {name}
-                  </span>
-                  <PlusIcon size={14} color="var(--accent)" />
+                  + {name}
                 </button>
               ))}
             </div>
@@ -580,17 +614,18 @@ function filterTabStyle(active: boolean): React.CSSProperties {
   };
 }
 
-const suggestionRowStyle: React.CSSProperties = {
-  width: '100%',
-  display: 'flex',
+const suggestionChipStyle: React.CSSProperties = {
+  display: 'inline-flex',
   alignItems: 'center',
-  gap: 'var(--space-3)',
-  padding: 'var(--space-3) var(--space-4)',
+  padding: '8px 16px',
   background: 'var(--bg-card)',
-  borderRadius: 'var(--radius-lg)',
-  border: '1px solid var(--border-light)',
+  borderRadius: 'var(--radius-full)',
+  border: '1px solid var(--border)',
   cursor: 'pointer',
   fontFamily: 'var(--font-family)',
+  fontSize: 'var(--font-size-sm)',
+  fontWeight: 500,
+  color: 'var(--text-secondary)',
   transition: 'all var(--transition-fast)',
 };
 

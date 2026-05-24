@@ -125,7 +125,7 @@ export function SectionCard({ category, expenses, onClick, hideAmounts = false }
       {/* Body */}
       {totals.count === 0 ? (
         <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', textAlign: 'center', padding: 'var(--space-1) 0', margin: 0 }}>
-          لم يضف بعد
+          ابدأ بأول شيء يناسبك
         </p>
       ) : (
         <>
