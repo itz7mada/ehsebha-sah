@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: 'احسبها صح',
         short_name: 'احسبها صح',
-        description: 'مساعد مجاني لتنظيم ميزانية الزواج بطريقة بسيطة وواضحة',
+        description: 'تطبيق مجاني يساعدك على ترتيب ميزانية الزواج ومتابعة خطتك المالية ببساطة وخصوصية.',
         theme_color: '#C99368',
         background_color: '#FAFAF8',
         display: 'standalone',

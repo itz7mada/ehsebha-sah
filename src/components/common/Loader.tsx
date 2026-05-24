@@ -49,8 +49,8 @@ export function Loader() {
   return (
     <div style={containerStyle} role="status" aria-label="جاري التحميل">
       <div>
-        <p style={appNameStyle}>زواج بوعي</p>
-        <p style={subtitleStyle}>تخطيط مالي لزفافك</p>
+        <p style={appNameStyle}>احسبها صح</p>
+        <p style={subtitleStyle}>نرتب لك الحسبة...</p>
       </div>
       <div style={spinnerRingStyle} />
       <div style={dotsStyle}>

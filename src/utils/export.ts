@@ -8,7 +8,7 @@ export function downloadJSON(data: BackupData): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `zawaj-bewai-backup-${formatDate(new Date().toISOString())}.json`;
+  a.download = `ehsebha-sah-backup-${formatDate(new Date().toISOString())}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -30,7 +30,7 @@ export function exportExpensesCSV(
     e.dueDate ? formatDate(e.dueDate) : '',
     e.notes || '',
   ]);
-  downloadCSV([headers, ...rows], 'zawaj-bewai-expenses');
+  downloadCSV([headers, ...rows], 'ehsebha-sah-expenses');
 }
 
 export function exportSupportCSV(support: SupportItem[]): void {
@@ -43,7 +43,7 @@ export function exportSupportCSV(support: SupportItem[]): void {
     s.date ? formatDate(s.date) : '',
     s.notes || '',
   ]);
-  downloadCSV([headers, ...rows], 'zawaj-bewai-support');
+  downloadCSV([headers, ...rows], 'ehsebha-sah-support');
 }
 
 function downloadCSV(rows: (string | number)[][], filename: string): void {
@@ -67,7 +67,7 @@ export function generateBudgetReportText(
   remaining: number,
   support: number
 ): string {
-  return `تقرير ميزانية زواج بوعي - ${name}
+  return `تقرير ميزانية احسبها صح - ${name}
 ============================
 الميزانية الشخصية: ${formatCurrency(budget)}
 المعونات المستلمة: ${formatCurrency(support)}
