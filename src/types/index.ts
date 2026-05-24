@@ -72,6 +72,7 @@ export interface ExpenseItem {
   dueDate?: string;
   notes?: string;
   imageData?: string;
+  images?: string[];
   priority: Priority;
   responsibility: Responsibility;
   createdAt: string;

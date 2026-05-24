@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { AddExpenseSheet } from '../components/expenses/AddExpenseSheet';
+import { AddPaymentSheet } from '../components/expenses/AddPaymentSheet';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { ProgressBar } from '../components/common/ProgressBar';
 import { Button } from '../components/common/Button';
@@ -72,10 +73,12 @@ function ChecklistRow({
   item,
   onEdit,
   onDelete,
+  onAddPayment,
 }: {
   item: ExpenseItem;
   onEdit: (item: ExpenseItem) => void;
   onDelete: (id: string) => void;
+  onAddPayment: (item: ExpenseItem) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -144,10 +147,15 @@ function ChecklistRow({
                   </span>
                 </div>
               )}
-              {item.imageData && (
+              {(item.images?.[0] ?? item.imageData) && (
                 <div style={{ marginRight: 'auto', width: '38px', height: '38px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-light)', flexShrink: 0 }}>
-                  <img src={item.imageData} alt="إيصال" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={item.images?.[0] ?? item.imageData!} alt="إيصال" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
+              )}
+              {(item.images?.length ?? 0) > 1 && (
+                <span style={{ fontSize: '10px', color: 'var(--text-tertiary)', fontWeight: 600 }}>
+                  +{(item.images?.length ?? 1) - 1}
+                </span>
               )}
             </div>
           )}
@@ -159,11 +167,19 @@ function ChecklistRow({
           <div style={rowActionsStyle}>
             <button
               type="button"
-              style={actionBtnStyle('var(--accent)')}
+              style={{ ...actionBtnStyle('var(--accent)'), borderInlineEnd: '1px solid var(--border-light)' }}
               onClick={() => { setExpanded(false); onEdit(item); }}
             >
               <EditIcon size={14} />
               <span>تعديل</span>
+            </button>
+            <button
+              type="button"
+              style={{ ...actionBtnStyle('var(--success)'), borderInlineEnd: '1px solid var(--border-light)' }}
+              onClick={() => { setExpanded(false); onAddPayment(item); }}
+            >
+              <PlusIcon size={14} />
+              <span>إضافة دفعة</span>
             </button>
             <button
               type="button"
@@ -251,6 +267,7 @@ export function SectionDetail() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [quickAddName, setQuickAddName] = useState<string | undefined>(undefined);
   const [showDeleteCatConfirm, setShowDeleteCatConfirm] = useState(false);
+  const [paymentItem, setPaymentItem] = useState<ExpenseItem | null>(null);
 
   const category = state.categories.find(c => c.id === categoryId);
   const totals = getCategoryTotal(state.expenses, categoryId ?? '');
@@ -430,6 +447,7 @@ export function SectionDetail() {
                 item={item}
                 onEdit={handleEdit}
                 onDelete={id => setDeleteTarget(id)}
+                onAddPayment={setPaymentItem}
               />
             ))}
           </div>
@@ -488,6 +506,12 @@ export function SectionDetail() {
         editItem={editItem}
         defaultCategoryId={categoryId}
         defaultName={quickAddName}
+      />
+
+      <AddPaymentSheet
+        isOpen={!!paymentItem}
+        onClose={() => setPaymentItem(null)}
+        item={paymentItem}
       />
 
       <ConfirmDialog
