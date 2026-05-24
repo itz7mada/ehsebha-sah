@@ -1,4 +1,5 @@
 import React from 'react';
+import { normalizeDigits } from '../../utils/formatting';
 
 interface InputProps {
   label?: string;
@@ -125,9 +126,11 @@ export function Input({
         ) : (
           <input
             id={inputId}
-            type={type}
+            type={type === 'number' ? 'text' : type}
+            inputMode={type === 'number' ? 'decimal' : undefined}
+            pattern={type === 'number' ? '[0-9]*' : undefined}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => onChange(type === 'number' ? normalizeDigits(e.target.value) : e.target.value)}
             placeholder={placeholder}
             disabled={disabled}
             autoFocus={autoFocus}

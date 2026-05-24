@@ -7,7 +7,7 @@ import { BottomSheet } from '../components/common/BottomSheet';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { PlusIcon } from '../components/common/Icons';
-import { getDaysLabel, maskAmount, parseCurrencyInput, formatCurrency, now, generateId } from '../utils/formatting';
+import { getDaysLabel, maskAmount, parseCurrencyInput, formatCurrency, now, generateId, normalizeDigits } from '../utils/formatting';
 import * as db from '../db/database';
 import type { Category } from '../types';
 
@@ -439,11 +439,12 @@ export default function Dashboard() {
                     د.إ
                   </span>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9]*"
                     value={reserveCustomRaw}
-                    min={0}
                     placeholder="0"
-                    onChange={e => setReserveCustomRaw(e.target.value)}
+                    onChange={e => setReserveCustomRaw(normalizeDigits(e.target.value))}
                     style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) var(--space-4)', direction: 'ltr', width: '100%' }}
                     autoFocus
                   />

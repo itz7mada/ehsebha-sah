@@ -47,8 +47,14 @@ export function getRelativeTime(dateStr: string): string {
   }
 }
 
+export function normalizeDigits(value: string): string {
+  return value
+    .replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 0x06F0));
+}
+
 export function parseCurrencyInput(value: string): number {
-  const cleaned = value.replace(/[^0-9.]/g, '');
+  const cleaned = normalizeDigits(value).replace(/[^0-9.]/g, '');
   const parsed = parseFloat(cleaned);
   return isNaN(parsed) ? 0 : parsed;
 }

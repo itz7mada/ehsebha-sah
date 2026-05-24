@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import { parseCurrencyInput, formatCurrency } from '../../utils/formatting';
+import { parseCurrencyInput, formatCurrency, normalizeDigits } from '../../utils/formatting';
 
 interface Step4BudgetProps {
   value: number;
@@ -13,8 +13,9 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
   const [focused, setFocused] = React.useState(false);
 
   function handleInputChange(raw: string) {
-    setRawInput(raw);
-    onChange(parseCurrencyInput(raw));
+    const normalized = normalizeDigits(raw);
+    setRawInput(normalized);
+    onChange(parseCurrencyInput(normalized));
   }
 
   const displayFormatted = value > 0 ? formatCurrency(value) : null;
@@ -46,10 +47,10 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
             <span style={prefix}>د.إ</span>
             <input
               id="w-budget"
-              type="number"
+              type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
               value={rawInput}
-              min={0}
               placeholder="150000"
               onChange={(e) => handleInputChange(e.target.value)}
               onFocus={() => setFocused(true)}

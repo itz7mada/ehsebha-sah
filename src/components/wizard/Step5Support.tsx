@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from '../common/Button';
 import { RELATION_OPTIONS } from '../../types';
-import { parseCurrencyInput, formatCurrency } from '../../utils/formatting';
+import { parseCurrencyInput, formatCurrency, normalizeDigits } from '../../utils/formatting';
 
 export interface SupportEntry {
   name: string;
@@ -83,7 +83,7 @@ export default function Step5Support({ choice, onChoiceChange, items, onItemsCha
               <label style={fieldLabel}>المبلغ</label>
               <div style={amtRow}>
                 <span style={prefix}>د.إ</span>
-                <input type="number" inputMode="numeric" value={amountRaw} min={0} placeholder="0" onChange={(e) => { setAmountRaw(e.target.value); setForm((f) => ({ ...f, amount: parseCurrencyInput(e.target.value) })); }} style={numInput} />
+                <input type="text" inputMode="numeric" pattern="[0-9]*" value={amountRaw} placeholder="0" onChange={(e) => { const n = normalizeDigits(e.target.value); setAmountRaw(n); setForm((f) => ({ ...f, amount: parseCurrencyInput(n) })); }} style={numInput} />
               </div>
             </div>
 

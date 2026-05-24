@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../common/Button';
-import { formatCurrency, parseCurrencyInput } from '../../utils/formatting';
+import { formatCurrency, parseCurrencyInput, normalizeDigits } from '../../utils/formatting';
 
 type ReserveOption = '0' | '5' | '10' | '15' | 'custom';
 type ReserveMode = 'from_budget' | 'extra';
@@ -46,8 +46,9 @@ export default function Step5Emergency({ budget, value, onChange, onNext }: Step
   }
 
   function onCustomRaw(raw: string) {
-    setCustomRaw(raw);
-    onChange(parseCurrencyInput(raw), customMode);
+    const normalized = normalizeDigits(raw);
+    setCustomRaw(normalized);
+    onChange(parseCurrencyInput(normalized), customMode);
   }
 
   function onCustomMode(m: ReserveMode) {
@@ -93,7 +94,7 @@ export default function Step5Emergency({ budget, value, onChange, onNext }: Step
             <label style={fieldLabel}>مبلغ الاحتياطي</label>
             <div style={amtRow}>
               <span style={prefix}>د.إ</span>
-              <input type="number" value={customRaw} min={0} placeholder="0" onChange={e => onCustomRaw(e.target.value)} style={numInput} autoFocus />
+              <input type="text" inputMode="decimal" pattern="[0-9]*" value={customRaw} placeholder="0" onChange={e => onCustomRaw(e.target.value)} style={numInput} autoFocus />
             </div>
             <p style={fieldLabel2}>طريقة الحساب</p>
             {MODE_OPTIONS.map(({ key: m, label, desc }) => {
