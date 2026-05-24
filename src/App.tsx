@@ -11,6 +11,7 @@ import Support from './pages/Support';
 import Reports from './pages/Reports';
 import Journey from './pages/Journey';
 import Settings from './pages/Settings';
+import ReportPreview from './pages/ReportPreview';
 
 function App() {
   const { state } = useApp();
@@ -30,19 +31,24 @@ function App() {
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/sections" element={<Sections />} />
-        <Route path="/sections/:id" element={<SectionDetail />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/journey" element={<Journey />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      <Route path="/report" element={<ReportPreview />} />
+      <Route path="*" element={
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sections" element={<Sections />} />
+            <Route path="/sections/:id" element={<SectionDetail />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/journey" element={<Journey />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Layout>
+      } />
+    </Routes>
   );
 }
 

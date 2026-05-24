@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import * as db from '../db/database';
 import { downloadJSON } from '../utils/export';
-import { printWeddingReport } from '../utils/report';
 import { validateBackupFile, validateBudget, validateWeddingDate } from '../utils/validation';
 import { parseCurrencyInput, generateId, now } from '../utils/formatting';
 import {
@@ -32,6 +32,7 @@ const HOUSING_OPTIONS: HousingSituation[] = ['family', 'rent', 'villa', 'undecid
 
 
 export default function Settings() {
+  const navigate = useNavigate();
   const { state, dispatch, refreshData } = useApp();
   const { settings } = state;
 
@@ -211,14 +212,7 @@ export default function Settings() {
   }
 
   function handlePrintReport() {
-    if (!state.stats) return;
-    printWeddingReport({
-      settings: settings!,
-      categories: state.categories,
-      expenses: state.expenses,
-      support: state.support,
-      stats: state.stats,
-    });
+    navigate('/report');
   }
 
   const pageStyle: React.CSSProperties = {
