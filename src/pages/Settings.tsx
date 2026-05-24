@@ -527,6 +527,9 @@ export default function Settings() {
               <p style={{ ...aboutBodyStyle, fontSize: 'var(--font-size-xs)' }}>
                 لا يجمع التطبيق بياناتك، ولا يرفعها إلى أي خادم. كل معلوماتك محفوظة على جهازك فقط.
               </p>
+              <p style={{ ...aboutBodyStyle, fontSize: 'var(--font-size-xs)', marginTop: 'var(--space-2)' }}>
+                النسخ الاحتياطي والصور تبقى محفوظة على جهازك فقط. احرص على حفظ نسخة احتياطية في مكان آمن إذا احتجتها لاحقاً.
+              </p>
             </div>
 
             <p style={aboutBodyStyle}>
