@@ -57,7 +57,7 @@ const navStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: 'var(--space-3)',
   padding: 'calc(env(safe-area-inset-top, 0px) + 14px) var(--space-5) 12px',
-  direction: 'ltr',
+  direction: 'rtl',
 };
 
 const backBtnStyle: React.CSSProperties = {

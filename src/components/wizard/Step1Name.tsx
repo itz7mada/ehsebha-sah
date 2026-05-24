@@ -62,6 +62,7 @@ export default function Step1Name({ value, onChange, onNext }: Step1NameProps) {
           {error && <p style={errorMsg}>{error}</p>}
         </div>
 
+        <div style={{ flex: 1 }} />
         <p style={reassurance}>ما يحتاج تسجيل دخول. كل شيء محفوظ على جهازك.</p>
       </div>
 
@@ -81,10 +82,10 @@ const footer: React.CSSProperties = { padding: 'var(--space-4) var(--space-6)', 
 const appMark: React.CSSProperties = { margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.5px', textAlign: 'center' };
 const headingBlock: React.CSSProperties = { marginTop: 'var(--space-8)' };
 const stepLabel: React.CSSProperties = { margin: 0, fontSize: '11px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.8px' };
-const title: React.CSSProperties = { margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-2xl)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 };
-const subtitle: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', lineHeight: 1.7 };
-const card: React.CSSProperties = { marginTop: 'var(--space-6)', background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-light)', padding: 'var(--space-5)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+const title: React.CSSProperties = { margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-3xl)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 };
+const subtitle: React.CSSProperties = { margin: 'var(--space-3) 0 0', fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', lineHeight: 1.7 };
+const card: React.CSSProperties = { marginTop: 'var(--space-6)', background: 'var(--bg-card)', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border)', padding: 'var(--space-6)', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' };
 const fieldLabel: React.CSSProperties = { fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-secondary)' };
-const inputEl: React.CSSProperties = { display: 'block', width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) var(--space-4)', boxSizing: 'border-box', direction: 'rtl' };
+const inputEl: React.CSSProperties = { display: 'block', width: '100%', border: 'none', outline: 'none', background: 'transparent', fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: '14px var(--space-4)', boxSizing: 'border-box', direction: 'rtl' };
 const errorMsg: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--danger)', fontWeight: 500 };
-const reassurance: React.CSSProperties = { margin: 'var(--space-5) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.6, textAlign: 'center' };
+const reassurance: React.CSSProperties = { margin: 'var(--space-4) 0 var(--space-2)', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.6, textAlign: 'center' };
