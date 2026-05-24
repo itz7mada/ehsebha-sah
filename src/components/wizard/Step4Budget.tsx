@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
+import { WalletIcon } from '../common/Icons';
 import { parseCurrencyInput, formatCurrency } from '../../utils/formatting';
 
 interface Step4BudgetProps {
@@ -21,6 +22,9 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
+        <span style={iconRingStyle}>
+          <WalletIcon size={28} color="var(--accent)" />
+        </span>
         <h1 style={titleStyle}>كم ميزانيتك الإجمالية؟</h1>
         <p style={subtitleStyle}>تقريبي، مب لازم يكون دقيق.</p>
 
@@ -81,6 +85,18 @@ const contentStyle: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   paddingTop: 'var(--space-6)',
+};
+
+const iconRingStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '68px',
+  height: '68px',
+  borderRadius: 'var(--radius-full)',
+  background: 'var(--accent-light)',
+  boxShadow: '0 4px 16px rgba(201,147,104,0.2)',
+  marginBottom: 'var(--space-5)',
 };
 
 const titleStyle: React.CSSProperties = {

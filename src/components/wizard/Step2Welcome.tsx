@@ -1,6 +1,5 @@
 import React from 'react';
 import Button from '../common/Button';
-import { CheckIcon } from '../common/Icons';
 
 interface Step2WelcomeProps {
   name: string;
@@ -8,31 +7,34 @@ interface Step2WelcomeProps {
 }
 
 const checkpoints = [
-  'خطة مالية واضحة',
-  'كل بياناتك على جهازك',
-  'بدون تسجيل أو اشتراك',
+  { text: 'خطة مالية واضحة', sub: 'توزيع الميزانية على كل بند' },
+  { text: 'بياناتك على جهازك فقط', sub: 'لا خوادم، لا سحاب، لا مشاركة' },
+  { text: 'بدون تسجيل أو اشتراك', sub: 'مجاني تماماً، من أول يوم' },
 ];
 
 export default function Step2Welcome({ name, onNext }: Step2WelcomeProps) {
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
-        <div style={greetingWrapStyle}>
+        <div style={greetingBlockStyle}>
+          <p style={welcomeTagStyle}>أهلاً وسهلاً</p>
           <h1 style={greetingStyle}>
             الله حيّه يا{' '}
             <span style={nameStyle}>{name}</span>!
           </h1>
+          <p style={descStyle}>
+            بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.
+          </p>
         </div>
 
-        <p style={descStyle}>
-          بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.
-        </p>
-
-        <div style={listWrapStyle}>
-          {checkpoints.map((text) => (
-            <div key={text} style={checkRowStyle}>
-              <span style={checkIconStyle}><CheckIcon size={14} color="var(--text-inverse)" /></span>
-              <span style={checkTextStyle}>{text}</span>
+        <div style={listStyle}>
+          {checkpoints.map((item, i) => (
+            <div key={i} style={{ ...rowStyle, borderBottom: i < checkpoints.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+              <span style={dotStyle} />
+              <div style={rowTextStyle}>
+                <span style={rowLabelStyle}>{item.text}</span>
+                <span style={rowSubStyle}>{item.sub}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -64,18 +66,29 @@ const contentStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  paddingTop: 'var(--space-8)',
+  paddingTop: 'var(--space-6)',
+  gap: 'var(--space-8)',
 };
 
-const greetingWrapStyle: React.CSSProperties = {
-  marginBottom: 'var(--space-5)',
+const greetingBlockStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-2)',
+};
+
+const welcomeTagStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-sm)',
+  fontWeight: 600,
+  color: 'var(--accent)',
+  letterSpacing: '0.5px',
+  margin: 0,
 };
 
 const greetingStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-2xl)',
   fontWeight: 800,
   color: 'var(--text-primary)',
-  lineHeight: 1.4,
+  lineHeight: 1.3,
   margin: 0,
 };
 
@@ -87,43 +100,51 @@ const descStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-base)',
   color: 'var(--text-secondary)',
   lineHeight: 1.7,
-  marginBottom: 'var(--space-8)',
+  margin: 0,
 };
 
-const listWrapStyle: React.CSSProperties = {
+const listStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-4)',
-};
-
-const checkRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--space-3)',
-  padding: 'var(--space-4)',
-  background: 'var(--accent-light)',
-  borderRadius: 'var(--radius-lg)',
+  gap: 0,
+  borderRadius: 'var(--radius-xl)',
+  background: 'var(--bg-card)',
   border: '1px solid var(--border-light)',
+  overflow: 'hidden',
 };
 
-const checkIconStyle: React.CSSProperties = {
-  width: '28px',
-  height: '28px',
+const rowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 'var(--space-4)',
+  padding: 'var(--space-4) var(--space-5)',
+};
+
+const dotStyle: React.CSSProperties = {
+  width: '8px',
+  height: '8px',
   borderRadius: 'var(--radius-full)',
   background: 'var(--accent)',
-  color: 'var(--text-inverse)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: 'var(--font-size-sm)',
-  fontWeight: 700,
   flexShrink: 0,
+  marginTop: '5px',
 };
 
-const checkTextStyle: React.CSSProperties = {
+const rowTextStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+};
+
+const rowLabelStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-base)',
-  fontWeight: 600,
+  fontWeight: 700,
   color: 'var(--text-primary)',
+};
+
+const rowSubStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-xs)',
+  color: 'var(--text-tertiary)',
+  lineHeight: 1.5,
 };
 
 const footerStyle: React.CSSProperties = {

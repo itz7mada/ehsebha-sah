@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../common/Button';
+import { AlertIcon } from '../common/Icons';
 import { formatCurrency, parseCurrencyInput } from '../../utils/formatting';
 
 type ReserveOption = '0' | '5' | '10' | '15' | 'custom';
@@ -62,6 +63,9 @@ export default function Step5Emergency({ budget, value, onChange, onNext }: Step
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
+        <span style={iconRingStyle}>
+          <AlertIcon size={26} color="var(--accent)" />
+        </span>
         <h1 style={titleStyle}>تبغي نخصص احتياطي للطوارئ؟</h1>
         <p style={subtitleStyle}>مبلغ بسيط على جنب للزيادات غير المتوقعة.</p>
 
@@ -182,6 +186,7 @@ function Row({ label, value, color, bold }: { label: string; value: string; colo
 }
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' };
+const iconRingStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '68px', height: '68px', borderRadius: 'var(--radius-full)', background: 'var(--accent-light)', boxShadow: '0 4px 16px rgba(201,147,104,0.2)', flexShrink: 0 };
 const contentStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'var(--space-4)', gap: 'var(--space-4)', overflowY: 'auto' };
 const titleStyle: React.CSSProperties = { fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--text-primary)', textAlign: 'center', margin: 0 };
 const subtitleStyle: React.CSSProperties = { fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.7, margin: 0 };

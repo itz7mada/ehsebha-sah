@@ -150,9 +150,7 @@ export default function SetupWizard() {
         <div style={topNavStyle}>
           {step > 1 ? (
             <button type="button" style={backBtnStyle} onClick={handleBack} aria-label="رجوع للخطوة السابقة">
-              <span style={{ display: 'flex', transform: 'scaleX(-1)' }}>
-                <ChevronRightIcon size={20} color="var(--text-secondary)" />
-              </span>
+              <ChevronRightIcon size={20} color="var(--text-secondary)" />
             </button>
           ) : (
             <div style={{ width: '36px', flexShrink: 0 }} />

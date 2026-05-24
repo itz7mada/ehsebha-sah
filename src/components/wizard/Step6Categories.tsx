@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
+import { GridIcon } from '../common/Icons';
 import { DEFAULT_CATEGORIES } from '../../types';
 
 interface Step6CategoriesProps {
@@ -18,6 +19,9 @@ export default function Step6Categories({
   return (
     <div style={containerStyle}>
       <div style={scrollAreaStyle}>
+        <span style={iconRingStyle}>
+          <GridIcon size={26} color="var(--accent)" />
+        </span>
         <h1 style={titleStyle}>شو تبغي نرتب في خطتك؟</h1>
         <p style={subtitleStyle}>اختار اللي يناسبك، وتقدر تضيف أو تحذف لاحقاً.</p>
 
@@ -83,6 +87,18 @@ const scrollAreaStyle: React.CSSProperties = {
   flex: 1,
   overflowY: 'auto',
   paddingBottom: 'var(--space-4)',
+};
+
+const iconRingStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '60px',
+  height: '60px',
+  borderRadius: 'var(--radius-full)',
+  background: 'var(--accent-light)',
+  boxShadow: '0 4px 12px rgba(201,147,104,0.18)',
+  marginBottom: 'var(--space-4)',
 };
 
 const titleStyle: React.CSSProperties = {

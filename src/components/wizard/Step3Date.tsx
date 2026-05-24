@@ -17,7 +17,9 @@ export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
     <div style={containerStyle}>
       <div style={contentStyle}>
         <div style={decorStyle}>
-          <CalendarIcon size={48} color="var(--accent)" />
+          <span style={iconRingStyle}>
+            <CalendarIcon size={28} color="var(--accent)" />
+          </span>
         </div>
         <h1 style={titleStyle}>متى موعد الزواج؟</h1>
         <p style={subtitleStyle}>عشان نحسب لك الأيام المتبقية.</p>
@@ -78,7 +80,17 @@ const contentStyle: React.CSSProperties = {
 const decorStyle: React.CSSProperties = {
   marginBottom: 'var(--space-5)',
   lineHeight: 0,
-  opacity: 0.85,
+};
+
+const iconRingStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '68px',
+  height: '68px',
+  borderRadius: 'var(--radius-full)',
+  background: 'var(--accent-light)',
+  boxShadow: '0 4px 16px rgba(201,147,104,0.2)',
 };
 
 const titleStyle: React.CSSProperties = {

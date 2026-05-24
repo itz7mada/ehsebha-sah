@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../common/Button';
+import { HeartIcon } from '../common/Icons';
 import { RELATION_OPTIONS } from '../../types';
 import { parseCurrencyInput, formatCurrency } from '../../utils/formatting';
 
@@ -60,6 +61,9 @@ export default function Step5Support({
   return (
     <div style={containerStyle}>
       <div style={scrollAreaStyle}>
+        <span style={iconRingStyle}>
+          <HeartIcon size={26} color="var(--accent)" />
+        </span>
         <h1 style={titleStyle}>عندك مساهمات؟</h1>
         <p style={subtitleStyle}>أي دعم من الأهل أو غيرهم، خله محسوب ضمن خطتك.</p>
 
@@ -203,6 +207,18 @@ const scrollAreaStyle: React.CSSProperties = {
   flex: 1,
   overflowY: 'auto',
   paddingBottom: 'var(--space-4)',
+};
+
+const iconRingStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '60px',
+  height: '60px',
+  borderRadius: 'var(--radius-full)',
+  background: 'var(--accent-light)',
+  boxShadow: '0 4px 12px rgba(201,147,104,0.18)',
+  marginBottom: 'var(--space-4)',
 };
 
 const titleStyle: React.CSSProperties = {
