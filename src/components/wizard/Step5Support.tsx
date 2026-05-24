@@ -18,10 +18,10 @@ interface Step5SupportProps {
   onNext: () => void;
 }
 
-const CHOICES: { value: 'yes' | 'later' | 'no'; label: string; emoji: string; desc: string }[] = [
-  { value: 'yes', label: 'نعم، عندي معونة', emoji: '🤝', desc: 'دعم مالي من الأهل أو الأقارب' },
-  { value: 'later', label: 'بعدين، سأضيفها لاحقًا', emoji: '⏰', desc: 'سأدخل التفاصيل لاحقًا' },
-  { value: 'no', label: 'لا، اعتمد على نفسي', emoji: '💪', desc: 'ميزانيتي منفردة' },
+const CHOICES: { value: 'yes' | 'later' | 'no'; label: string; desc: string }[] = [
+  { value: 'yes', label: 'عندي مساهمات', desc: 'دعم مالي من الأهل أو الأقارب' },
+  { value: 'later', label: 'بضيفها لاحقاً', desc: 'أدخل التفاصيل بعدين' },
+  { value: 'no', label: 'اعتمد على نفسي', desc: 'ميزانيتي بدون مساهمات' },
 ];
 
 export default function Step5Support({
@@ -60,7 +60,8 @@ export default function Step5Support({
   return (
     <div style={containerStyle}>
       <div style={scrollAreaStyle}>
-        <h1 style={titleStyle}>هل تتوقع معونة أو دعم من الأهل؟</h1>
+        <h1 style={titleStyle}>عندك مساهمات؟</h1>
+        <p style={subtitleStyle}>أي دعم من الأهل أو غيرهم، خله محسوب ضمن خطتك.</p>
 
         <div style={choicesGridStyle}>
           {CHOICES.map((c) => (
@@ -73,7 +74,6 @@ export default function Step5Support({
               }}
               onClick={() => onChoiceChange(c.value)}
             >
-              <span style={choiceEmojiStyle}>{c.emoji}</span>
               <span style={choiceLabelStyle}>{c.label}</span>
               <span style={choiceDescStyle}>{c.desc}</span>
             </button>
@@ -112,9 +112,10 @@ export default function Step5Support({
               <div style={fieldGroupStyle}>
                 <label style={fieldLabelStyle}>المبلغ</label>
                 <div style={amountRowStyle}>
-                  <span style={prefixStyle}>D</span>
+                  <span style={prefixStyle}>د.إ</span>
                   <input
                     type="number"
+                    inputMode="numeric"
                     value={amountRaw}
                     min={0}
                     placeholder="0"
@@ -185,7 +186,7 @@ export default function Step5Support({
 
       <div style={footerStyle}>
         <Button variant="primary" size="lg" fullWidth onClick={onNext}>
-          التالي →
+          التالي
         </Button>
       </div>
     </div>
@@ -208,8 +209,15 @@ const titleStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-xl)',
   fontWeight: 800,
   color: 'var(--text-primary)',
-  marginBottom: 'var(--space-6)',
+  marginBottom: 'var(--space-2)',
   lineHeight: 1.4,
+};
+
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-sm)',
+  color: 'var(--text-secondary)',
+  marginBottom: 'var(--space-6)',
+  lineHeight: 1.6,
 };
 
 const choicesGridStyle: React.CSSProperties = {
@@ -238,11 +246,6 @@ const choiceCardStyle: React.CSSProperties = {
 const choiceCardActiveStyle: React.CSSProperties = {
   background: 'var(--accent-light)',
   borderColor: 'var(--accent)',
-};
-
-const choiceEmojiStyle: React.CSSProperties = {
-  fontSize: '24px',
-  marginBottom: 'var(--space-1)',
 };
 
 const choiceLabelStyle: React.CSSProperties = {
@@ -294,7 +297,7 @@ const sharedFieldStyle: React.CSSProperties = {
   background: 'var(--bg-card)',
   border: '1.5px solid var(--border)',
   borderRadius: 'var(--radius-lg)',
-  fontSize: 'var(--font-size-base)',
+  fontSize: '16px',
   color: 'var(--text-primary)',
   fontFamily: 'var(--font-family)',
   padding: 'var(--space-3) var(--space-4)',
@@ -335,7 +338,7 @@ const amountInputStyle: React.CSSProperties = {
   border: 'none',
   outline: 'none',
   background: 'transparent',
-  fontSize: 'var(--font-size-base)',
+  fontSize: '16px',
   color: 'var(--text-primary)',
   fontFamily: 'var(--font-family)',
   padding: 'var(--space-3) var(--space-4)',

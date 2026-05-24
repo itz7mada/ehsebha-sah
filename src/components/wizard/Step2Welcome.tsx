@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
+import { CheckIcon } from '../common/Icons';
 
 interface Step2WelcomeProps {
   name: string;
@@ -24,13 +25,13 @@ export default function Step2Welcome({ name, onNext }: Step2WelcomeProps) {
         </div>
 
         <p style={descStyle}>
-          خلنا نرتب وياك رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.
+          بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.
         </p>
 
         <div style={listWrapStyle}>
           {checkpoints.map((text) => (
             <div key={text} style={checkRowStyle}>
-              <span style={checkIconStyle}>✓</span>
+              <span style={checkIconStyle}><CheckIcon size={14} color="var(--text-inverse)" /></span>
               <span style={checkTextStyle}>{text}</span>
             </div>
           ))}
@@ -44,7 +45,7 @@ export default function Step2Welcome({ name, onNext }: Step2WelcomeProps) {
           fullWidth
           onClick={onNext}
         >
-          نرتبها →
+          نرتبها
         </Button>
       </div>
     </div>

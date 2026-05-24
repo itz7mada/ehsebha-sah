@@ -62,7 +62,6 @@ export default function Step5Emergency({ budget, value, onChange, onNext }: Step
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
-        <div style={iconStyle}>🛡️</div>
         <h1 style={titleStyle}>تبغي نخصص احتياطي للطوارئ؟</h1>
         <p style={subtitleStyle}>مبلغ بسيط على جنب للزيادات غير المتوقعة.</p>
 
@@ -162,7 +161,7 @@ export default function Step5Emergency({ budget, value, onChange, onNext }: Step
 
       <div style={footerStyle}>
         <Button variant="primary" size="lg" fullWidth onClick={onNext}>
-          التالي →
+          التالي
         </Button>
       </div>
     </div>
@@ -184,7 +183,6 @@ function Row({ label, value, color, bold }: { label: string; value: string; colo
 
 const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' };
 const contentStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 'var(--space-4)', gap: 'var(--space-4)', overflowY: 'auto' };
-const iconStyle: React.CSSProperties = { fontSize: '48px', lineHeight: 1 };
 const titleStyle: React.CSSProperties = { fontSize: 'var(--font-size-xl)', fontWeight: 800, color: 'var(--text-primary)', textAlign: 'center', margin: 0 };
 const subtitleStyle: React.CSSProperties = { fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.7, margin: 0 };
 const pctRowStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-2)', width: '100%' };

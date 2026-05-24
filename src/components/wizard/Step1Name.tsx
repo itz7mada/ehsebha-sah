@@ -30,7 +30,7 @@ export default function Step1Name({ value, onChange, onNext }: Step1NameProps) {
           </svg>
         </div>
         <h1 style={titleStyle}>شو اسمك؟</h1>
-        <p style={subtitleStyle}>خلنا نتعرف عليك</p>
+        <p style={subtitleStyle}>خلنا نعرفك عشان نرتب لك التجربة.</p>
 
         <div style={inputWrapStyle}>
           <Input
@@ -51,7 +51,7 @@ export default function Step1Name({ value, onChange, onNext }: Step1NameProps) {
           disabled={!canProceed}
           onClick={handleNext}
         >
-          يلا نبدأ ←
+          يلا نبدأ
         </Button>
       </div>
     </div>

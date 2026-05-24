@@ -18,8 +18,8 @@ export default function Step6Categories({
   return (
     <div style={containerStyle}>
       <div style={scrollAreaStyle}>
-        <h1 style={titleStyle}>اختر الأشياء التي تحتاجها فقط</h1>
-        <p style={subtitleStyle}>تقدر تضيف أو تحذف أي شيء لاحقًا</p>
+        <h1 style={titleStyle}>شو تبغي نرتب في خطتك؟</h1>
+        <p style={subtitleStyle}>اختار اللي يناسبك، وتقدر تضيف أو تحذف لاحقاً.</p>
 
         <div style={gridStyle}>
           {DEFAULT_CATEGORIES.map((cat) => {
@@ -66,7 +66,7 @@ export default function Step6Categories({
           disabled={loading}
           onClick={onComplete}
         >
-          {loading ? '' : 'إنشاء خطتي 🎉'}
+          {loading ? '' : 'ابدأ الخطة'}
         </Button>
       </div>
     </div>

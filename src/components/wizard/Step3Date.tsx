@@ -1,5 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
+import { CalendarIcon } from '../common/Icons';
 import { validateWeddingDate } from '../../utils/validation';
 
 interface Step3DateProps {
@@ -15,16 +16,20 @@ export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
-        <div style={decorStyle}>📅</div>
+        <div style={decorStyle}>
+          <CalendarIcon size={48} color="var(--accent)" />
+        </div>
         <h1 style={titleStyle}>متى موعد الزواج؟</h1>
-        <p style={subtitleStyle}>عشان نحسب لك الأيام المتبقية</p>
+        <p style={subtitleStyle}>عشان نحسب لك الأيام المتبقية.</p>
 
         <div style={inputBlockStyle}>
           <label style={labelStyle} htmlFor="wedding-date">
             تاريخ الزواج
           </label>
           <div style={dateWrapStyle}>
-            <span style={calIconStyle}>📅</span>
+            <span style={calIconStyle}>
+              <CalendarIcon size={18} color="var(--accent)" />
+            </span>
             <input
               id="wedding-date"
               type="date"
@@ -36,7 +41,7 @@ export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
           </div>
         </div>
 
-        <p style={hintStyle}>تقدر تعدلها لاحقًا</p>
+        <p style={hintStyle}>تقدر تعدله لاحقاً.</p>
       </div>
 
       <div style={footerStyle}>
@@ -47,7 +52,7 @@ export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
           disabled={!canProceed}
           onClick={onNext}
         >
-          التالي →
+          التالي
         </Button>
       </div>
     </div>
@@ -71,9 +76,9 @@ const contentStyle: React.CSSProperties = {
 };
 
 const decorStyle: React.CSSProperties = {
-  fontSize: '56px',
   marginBottom: 'var(--space-5)',
-  lineHeight: 1,
+  lineHeight: 0,
+  opacity: 0.85,
 };
 
 const titleStyle: React.CSSProperties = {
@@ -117,7 +122,6 @@ const dateWrapStyle: React.CSSProperties = {
 
 const calIconStyle: React.CSSProperties = {
   padding: '0 var(--space-3)',
-  fontSize: '18px',
   background: 'var(--accent-light)',
   alignSelf: 'stretch',
   display: 'flex',
@@ -131,7 +135,7 @@ const dateInputStyle: React.CSSProperties = {
   border: 'none',
   outline: 'none',
   background: 'transparent',
-  fontSize: 'var(--font-size-base)',
+  fontSize: '16px',
   color: 'var(--text-primary)',
   fontFamily: 'var(--font-family)',
   padding: 'var(--space-3) var(--space-4)',

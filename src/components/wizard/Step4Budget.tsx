@@ -21,22 +21,22 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
   return (
     <div style={containerStyle}>
       <div style={contentStyle}>
-        <div style={decorStyle}>💰</div>
-        <h1 style={titleStyle}>كم تتوقع ميزانيتك الإجمالية؟</h1>
-        <p style={subtitleStyle}>تقريبي، مش لازم يكون دقيق</p>
+        <h1 style={titleStyle}>كم ميزانيتك الإجمالية؟</h1>
+        <p style={subtitleStyle}>تقريبي، مب لازم يكون دقيق.</p>
 
         <div style={inputBlockStyle}>
           <label style={labelStyle} htmlFor="budget-input">
             الميزانية الإجمالية
           </label>
           <div style={fieldRowStyle}>
-            <span style={prefixStyle}>D</span>
+            <span style={prefixStyle}>د.إ</span>
             <input
               id="budget-input"
               type="number"
+              inputMode="numeric"
               value={rawInput}
               min={0}
-              placeholder="150,000"
+              placeholder="150000"
               onChange={(e) => handleInputChange(e.target.value)}
               style={numInputStyle}
             />
@@ -50,12 +50,7 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
           )}
         </div>
 
-        <div style={hintCardStyle}>
-          <span style={hintIconStyle}>💡</span>
-          <p style={hintTextStyle}>
-            لا تشيل هم، تقدر تعدلها لاحقًا. هذا المبلغ تقريبي فقط.
-          </p>
-        </div>
+        <p style={hintStyle}>لا تشيل هم، تقدر تعدلها لاحقاً.</p>
       </div>
 
       <div style={footerStyle}>
@@ -65,7 +60,7 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
           fullWidth
           onClick={onNext}
         >
-          التالي →
+          التالي
         </Button>
       </div>
     </div>
@@ -85,13 +80,7 @@ const contentStyle: React.CSSProperties = {
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  paddingTop: 'var(--space-8)',
-};
-
-const decorStyle: React.CSSProperties = {
-  fontSize: '56px',
-  marginBottom: 'var(--space-5)',
-  lineHeight: 1,
+  paddingTop: 'var(--space-6)',
 };
 
 const titleStyle: React.CSSProperties = {
@@ -115,7 +104,7 @@ const inputBlockStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 'var(--space-2)',
-  marginBottom: 'var(--space-5)',
+  marginBottom: 'var(--space-4)',
 };
 
 const labelStyle: React.CSSProperties = {
@@ -153,7 +142,7 @@ const numInputStyle: React.CSSProperties = {
   border: 'none',
   outline: 'none',
   background: 'transparent',
-  fontSize: 'var(--font-size-lg)',
+  fontSize: '16px',
   fontWeight: 700,
   color: 'var(--text-primary)',
   fontFamily: 'var(--font-family)',
@@ -180,26 +169,10 @@ const previewAmountStyle: React.CSSProperties = {
   color: 'var(--accent)',
 };
 
-const hintCardStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'flex-start',
-  gap: 'var(--space-3)',
-  padding: 'var(--space-4)',
-  background: 'var(--accent-light)',
-  borderRadius: 'var(--radius-lg)',
-  width: '100%',
-};
-
-const hintIconStyle: React.CSSProperties = {
-  fontSize: '20px',
-  flexShrink: 0,
-};
-
-const hintTextStyle: React.CSSProperties = {
+const hintStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-secondary)',
-  lineHeight: 1.6,
-  margin: 0,
+  color: 'var(--text-tertiary)',
+  textAlign: 'center',
 };
 
 const footerStyle: React.CSSProperties = {

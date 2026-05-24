@@ -6,6 +6,7 @@ import { generateId, now } from '../utils/formatting';
 import { DEFAULT_CATEGORIES } from '../types';
 import type { Settings, Category, SupportItem, JourneyEvent, HousingSituation } from '../types';
 
+import { ChevronRightIcon } from '../components/common/Icons';
 import Step1Name from '../components/wizard/Step1Name';
 import Step2Welcome from '../components/wizard/Step2Welcome';
 import Step3Date from '../components/wizard/Step3Date';
@@ -65,6 +66,10 @@ export default function SetupWizard() {
 
   function handleNext() {
     if (step < TOTAL_STEPS) goToStep(step + 1);
+  }
+
+  function handleBack() {
+    if (step > 1) goToStep(step - 1);
   }
 
   function toggleCategory(name: string) {
@@ -141,22 +146,26 @@ export default function SetupWizard() {
   return (
     <div style={rootStyle}>
       <div style={innerStyle}>
-        {/* Progress bar */}
-        <div style={progressBarTrackStyle}>
-          <div
-            style={{
-              ...progressBarFillStyle,
-              width: `${progressPercent}%`,
-            }}
-          />
-        </div>
-
-        {/* Step counter - direction:ltr to prevent RTL reversal */}
-        <div style={stepCounterStyle}>
-          <span style={{ direction: 'ltr', display: 'inline-block' }}>
+        {/* Top nav row */}
+        <div style={topNavStyle}>
+          {step > 1 ? (
+            <button type="button" style={backBtnStyle} onClick={handleBack} aria-label="رجوع للخطوة السابقة">
+              <span style={{ display: 'flex', transform: 'scaleX(-1)' }}>
+                <ChevronRightIcon size={20} color="var(--text-secondary)" />
+              </span>
+            </button>
+          ) : (
+            <div style={{ width: '36px', flexShrink: 0 }} />
+          )}
+          <span style={{ direction: 'ltr', display: 'inline-flex', alignItems: 'baseline', gap: '1px' }}>
             <span style={stepNumStyle}>{step}</span>
             <span style={stepOfStyle}> / {TOTAL_STEPS}</span>
           </span>
+        </div>
+
+        {/* Progress bar */}
+        <div style={progressBarTrackStyle}>
+          <div style={{ ...progressBarFillStyle, width: `${progressPercent}%` }} />
         </div>
 
         {/* Step content with fade animation */}
@@ -262,10 +271,35 @@ const innerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   padding: '0 var(--space-6)',
-  paddingTop: 'var(--space-4)',
+  paddingTop: 0,
   paddingBottom: 'calc(var(--space-6) + var(--safe-bottom))',
   boxSizing: 'border-box',
   position: 'relative',
+};
+
+const topNavStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingTop: 'calc(env(safe-area-inset-top, 0px) + var(--space-3))',
+  marginBottom: 'var(--space-3)',
+  direction: 'ltr',
+};
+
+const backBtnStyle: React.CSSProperties = {
+  width: '36px',
+  height: '36px',
+  borderRadius: 'var(--radius-full)',
+  background: 'var(--bg-secondary)',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  WebkitTapHighlightColor: 'transparent',
+  color: 'var(--text-secondary)',
 };
 
 const progressBarTrackStyle: React.CSSProperties = {
@@ -284,12 +318,6 @@ const progressBarFillStyle: React.CSSProperties = {
   transition: 'width 400ms cubic-bezier(0.4,0,0.2,1)',
 };
 
-const stepCounterStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'baseline',
-  justifyContent: 'flex-end',
-  marginBottom: 'var(--space-2)',
-};
 
 const stepNumStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-sm)',

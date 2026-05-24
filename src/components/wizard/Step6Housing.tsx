@@ -1,12 +1,13 @@
 import React from 'react';
 import Button from '../common/Button';
+import { CheckIcon } from '../common/Icons';
 import type { HousingSituation } from '../../types';
 
-const OPTIONS: { value: HousingSituation; label: string; emoji: string; subtitle: string }[] = [
-  { value: 'family', label: 'بيت الأهل', emoji: '🏡', subtitle: 'السكن مع الأهل مؤقتًا' },
-  { value: 'rent', label: 'إيجار', emoji: '🏢', subtitle: 'استئجار شقة أو وحدة سكنية' },
-  { value: 'villa', label: 'فيلا', emoji: '🏠', subtitle: 'امتلاك أو إيجار فيلا' },
-  { value: 'undecided', label: 'بعدني ما قررت', emoji: '🤔', subtitle: 'سيُحدد لاحقًا' },
+const OPTIONS: { value: HousingSituation; label: string; subtitle: string }[] = [
+  { value: 'family', label: 'بيت الأهل', subtitle: 'السكن مع الأهل مؤقتاً' },
+  { value: 'rent', label: 'إيجار', subtitle: 'شقة أو وحدة سكنية' },
+  { value: 'villa', label: 'فيلا / بيت مستقل', subtitle: 'امتلاك أو إيجار فيلا' },
+  { value: 'undecided', label: 'بعدني ما قررت', subtitle: 'يمكن تحديده لاحقاً' },
 ];
 
 interface Step6HousingProps {
@@ -20,7 +21,7 @@ export default function Step6Housing({ value, onChange, onNext }: Step6HousingPr
     <div style={containerStyle}>
       <div style={scrollAreaStyle}>
         <h1 style={titleStyle}>وين بتسكن بعد الزواج؟</h1>
-        <p style={subtitleStyle}>يساعدنا في تنظيم الأقسام المناسبة لك</p>
+        <p style={subtitleStyle}>عشان نرتب لك البنود المناسبة.</p>
 
         <div style={optionsStyle}>
           {OPTIONS.map(opt => {
@@ -36,7 +37,6 @@ export default function Step6Housing({ value, onChange, onNext }: Step6HousingPr
                 onClick={() => onChange(opt.value)}
                 aria-pressed={selected}
               >
-                <span style={optionEmojiStyle}>{opt.emoji}</span>
                 <div style={optionTextStyle}>
                   <span style={{
                     fontSize: 'var(--font-size-base)',
@@ -49,7 +49,11 @@ export default function Step6Housing({ value, onChange, onNext }: Step6HousingPr
                     {opt.subtitle}
                   </span>
                 </div>
-                {selected && <span style={checkStyle}>✓</span>}
+                {selected && (
+                  <span style={checkStyle}>
+                    <CheckIcon size={12} color="var(--text-inverse)" />
+                  </span>
+                )}
               </button>
             );
           })}
@@ -111,7 +115,7 @@ const optionStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--space-4)',
-  padding: 'var(--space-4)',
+  padding: 'var(--space-4) var(--space-5)',
   borderRadius: 'var(--radius-xl)',
   border: '2px solid',
   cursor: 'pointer',
@@ -134,12 +138,6 @@ const optionDefaultStyle: React.CSSProperties = {
   boxShadow: 'var(--shadow-sm)',
 };
 
-const optionEmojiStyle: React.CSSProperties = {
-  fontSize: '28px',
-  lineHeight: 1,
-  flexShrink: 0,
-};
-
 const optionTextStyle: React.CSSProperties = {
   flex: 1,
   display: 'flex',
@@ -156,8 +154,6 @@ const checkStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: '12px',
-  fontWeight: 800,
   flexShrink: 0,
 };
 
