@@ -105,6 +105,11 @@ function sepLine(ctx: CanvasRenderingContext2D, x1: number, x2: number, y: numbe
   ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
 }
 
+function vSep(ctx: CanvasRenderingContext2D, x: number, y1: number, y2: number, color: string) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x, y1); ctx.lineTo(x, y2); ctx.stroke();
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────
 
 export async function generateShareImage(
@@ -274,9 +279,7 @@ export async function generateShareImage(
     // Labels drawn RTL (pure Arabic)
     t(ctx, s.lbl, 16, 400, C.ter, 'right', colRA, heroY + hy + 46);
     if (i < 2) {
-      sepLine(ctx,
-        L + colW * (i + 1), L + colW * (i + 1),
-        heroY + hy + 6, C.sep);
+      vSep(ctx, L + colW * (i + 1), heroY + hy, heroY + hy + 54, C.sep);
     }
   });
   hy += 58;
