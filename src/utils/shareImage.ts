@@ -3,97 +3,109 @@ import type { BudgetStats } from '../types';
 
 export interface ShareTopCat {
   name: string;
-  total: number; // expectedAmount total
-  paid: number;  // paidAmount total
+  total: number;
+  paid: number;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Primitive helpers ─────────────────────────────────────────────────────
 
-function rr(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, r: number,
-) {
-  const sr = Math.min(r, w / 2, h / 2);
+function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const s = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
-  ctx.moveTo(x + sr, y);
-  ctx.lineTo(x + w - sr, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + sr);
-  ctx.lineTo(x + w, y + h - sr);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - sr, y + h);
-  ctx.lineTo(x + sr, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - sr);
-  ctx.lineTo(x, y + sr);
-  ctx.quadraticCurveTo(x, y, x + sr, y);
+  ctx.moveTo(x + s, y); ctx.lineTo(x + w - s, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + s);
+  ctx.lineTo(x + w, y + h - s);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - s, y + h);
+  ctx.lineTo(x + s, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - s);
+  ctx.lineTo(x, y + s);
+  ctx.quadraticCurveTo(x, y, x + s, y);
   ctx.closePath();
 }
 
-function progressBar(
+function pgBar(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number, pct: number,
-  bgColor: string, fillA: string, fillB: string,
+  bg: string, ca: string, cb: string,
 ) {
-  ctx.fillStyle = bgColor;
+  ctx.fillStyle = bg;
   rr(ctx, x, y, w, h, h / 2);
   ctx.fill();
-  const fw = Math.max(Math.min(w * pct / 100, w), pct > 0 ? h : 0);
+  const fw = Math.max(pct > 0 ? h : 0, Math.min(w * pct / 100, w));
   if (fw > 0) {
     const g = ctx.createLinearGradient(x, 0, x + fw, 0);
-    g.addColorStop(0, fillA);
-    g.addColorStop(1, fillB);
+    g.addColorStop(0, ca); g.addColorStop(1, cb);
     ctx.fillStyle = g;
     rr(ctx, x, y, fw, h, h / 2);
     ctx.fill();
   }
 }
 
-function card(
+function drawCard(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, radius: number,
+  x: number, y: number, w: number, h: number, r: number,
   fill: string, border: string, shadow: string,
 ) {
-  ctx.shadowColor = shadow;
-  ctx.shadowBlur = 20;
-  ctx.shadowOffsetY = 5;
+  ctx.shadowColor = shadow; ctx.shadowBlur = 18; ctx.shadowOffsetY = 5;
   ctx.fillStyle = fill;
-  rr(ctx, x, y, w, h, radius);
+  rr(ctx, x, y, w, h, r);
   ctx.fill();
   ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = border;
-  ctx.lineWidth = 1;
-  rr(ctx, x, y, w, h, radius);
+  ctx.strokeStyle = border; ctx.lineWidth = 1;
+  rr(ctx, x, y, w, h, r);
   ctx.stroke();
 }
 
-function goldBar(
+function goldBarTop(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, radius: number,
-  colorA: string, colorMid: string, colorB: string,
+  x: number, y: number, w: number, h: number, r: number,
+  ca: string, cm: string, cb: string,
 ) {
   ctx.save();
-  rr(ctx, x, y, w, h, radius);
+  rr(ctx, x, y, w, h, r);
   ctx.clip();
   const g = ctx.createLinearGradient(x, 0, x + w, 0);
-  g.addColorStop(0, colorA);
-  g.addColorStop(0.5, colorMid);
-  g.addColorStop(1, colorB);
+  g.addColorStop(0, ca); g.addColorStop(0.55, cm); g.addColorStop(1, cb);
   ctx.fillStyle = g;
   ctx.fillRect(x, y, w, 5);
   ctx.restore();
 }
 
-function txt(
+/** Draw Arabic/RTL text. y = baseline. */
+function t(
   ctx: CanvasRenderingContext2D,
-  text: string, size: number, weight: number, color: string,
+  text: string, sz: number, wt: number, color: string,
   align: 'right' | 'left' | 'center', x: number, y: number, dir: 'rtl' | 'ltr' = 'rtl',
 ) {
-  ctx.font = `${weight} ${size}px "Cairo", system-ui, -apple-system, Arial, sans-serif`;
+  ctx.font = `${wt} ${sz}px "Cairo", system-ui, -apple-system, Arial, sans-serif`;
   ctx.fillStyle = color;
   ctx.direction = dir;
   ctx.textAlign = align;
   ctx.fillText(text, x, y);
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
+/**
+ * Draw a currency / numeric string with LTR direction to prevent Unicode
+ * bidi reordering of "د.إ" + digits in RTL canvas context.
+ */
+function amt(
+  ctx: CanvasRenderingContext2D,
+  text: string, sz: number, wt: number, color: string,
+  align: 'right' | 'left' | 'center', x: number, y: number,
+) {
+  ctx.font = `${wt} ${sz}px "Cairo", system-ui, -apple-system, Arial, sans-serif`;
+  ctx.fillStyle = color;
+  ctx.direction = 'ltr';
+  ctx.textAlign = align;
+  ctx.fillText(text, x, y);
+}
+
+function sepLine(ctx: CanvasRenderingContext2D, x1: number, x2: number, y: number, color: string) {
+  ctx.strokeStyle = color; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+}
+
+// ─── Main ──────────────────────────────────────────────────────────────────
 
 export async function generateShareImage(
   name: string,
@@ -106,298 +118,313 @@ export async function generateShareImage(
 
   try {
     await Promise.all([
-      document.fonts.load('800 64px Cairo'),
-      document.fonts.load('700 28px Cairo'),
+      document.fonts.load('800 68px Cairo'),
+      document.fonts.load('700 34px Cairo'),
       document.fonts.load('600 22px Cairo'),
       document.fonts.load('400 18px Cairo'),
     ]);
-  } catch { /* continue with fallback */ }
+  } catch { /* use fallback */ }
 
   const W = 1080, H = 1350;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d')!;
 
-  // ── Palette ───────────────────────────────────────────────────
   const D = isDark;
+
+  // ── Palette ───────────────────────────────────────────────────────────────
   const C = {
-    bg:          D ? '#0D0D0A' : '#F0EAE1',
-    bgGrad:      D ? '#141410' : '#E8E0D4',
-    card:        D ? '#1C1C18' : '#FFFFFF',
-    cardBorder:  D ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
-    cardShadow:  D ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.10)',
-    textPri:     D ? '#F0EFE8' : '#111827',
-    textSec:     D ? '#9A9A94' : '#6B6B67',
-    textTer:     D ? '#555550' : '#A0A0A0',
-    accent:      D ? '#D4A240' : '#C99368',
-    accentDark:  '#A87248',
-    accentFade:  D ? 'rgba(212,162,64,0.12)' : '#F5E3D0',
-    sep:         D ? 'rgba(255,255,255,0.07)' : '#E0D8CE',
-    progBg:      D ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.09)',
+    bg:     D ? '#0D0D0A' : '#EDE6DB',
+    bgB:    D ? '#171713' : '#E3DACE',
+    card:   D ? '#252320' : '#FFFFFF',
+    cardBd: D ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.08)',
+    cardSh: D ? 'rgba(0,0,0,0.65)'       : 'rgba(0,0,0,0.11)',
+    // Primary text: near-white / deep navy
+    pri:    D ? '#F0EFE8' : '#111827',
+    // Secondary text: readable on dark cards (was too dim at #9C9C94)
+    sec:    D ? '#B4B3AC' : '#5C5C58',
+    // Tertiary / muted labels (was too dim at #6A6A62)
+    ter:    D ? '#8E8D88' : '#9A9A98',
+    acc:    D ? '#D4A240' : '#C99368',
+    accDk:  '#A87248',
+    accFd:  D ? 'rgba(212,162,64,0.18)' : '#F5E3D0',
+    sep:    D ? 'rgba(255,255,255,0.13)' : '#DDD5C8',
+    pgBg:   D ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)',
   };
 
-  const STATUS_COLOR: Record<string, string> = {
-    comfortable: '#2FAE72',
-    balanced: C.accent,
-    attention: '#E67E22',
-    exceeded: '#E74C3C',
+  const SK_CLR: Record<string, string> = {
+    comfortable: '#2FAE72', balanced: C.acc, attention: '#E67E22', exceeded: '#E74C3C',
   };
-  const STATUS_BG: Record<string, string> = {
-    comfortable: D ? 'rgba(47,174,114,0.15)' : '#D4F4E5',
-    balanced: C.accentFade,
-    attention: D ? 'rgba(230,126,34,0.15)' : '#FDEBD0',
-    exceeded: D ? 'rgba(231,76,60,0.15)' : '#FADBD8',
+  const SK_BG: Record<string, string> = {
+    comfortable: D ? 'rgba(47,174,114,0.20)'  : '#D4F4E5',
+    balanced:    C.accFd,
+    attention:   D ? 'rgba(230,126,34,0.20)'  : '#FDEBD0',
+    exceeded:    D ? 'rgba(231,76,60,0.20)'   : '#FADBD8',
   };
-  const STATUS_LABEL: Record<string, string> = {
-    comfortable: 'مريح',
-    balanced: 'متوازن',
-    attention: 'يحتاج انتباه',
-    exceeded: 'تجاوز الميزانية',
+  const SK_LBL: Record<string, string> = {
+    comfortable: 'مريح', balanced: 'متوازن', attention: 'يحتاج انتباه', exceeded: 'تجاوز الميزانية',
   };
 
-  // ── Canvas background ─────────────────────────────────────────
+  // ── Background ────────────────────────────────────────────────────────────
   const bgG = ctx.createLinearGradient(0, 0, 0, H);
-  bgG.addColorStop(0, C.bg);
-  bgG.addColorStop(1, C.bgGrad);
-  ctx.fillStyle = bgG;
-  ctx.fillRect(0, 0, W, H);
+  bgG.addColorStop(0, C.bg); bgG.addColorStop(1, C.bgB);
+  ctx.fillStyle = bgG; ctx.fillRect(0, 0, W, H);
 
-  // Warm radial glow at top
-  const radG = ctx.createRadialGradient(W / 2, 0, 80, W / 2, 0, 480);
-  radG.addColorStop(0, D ? 'rgba(212,162,64,0.07)' : 'rgba(201,147,104,0.12)');
+  const radG = ctx.createRadialGradient(W / 2, 0, 60, W / 2, 0, 440);
+  radG.addColorStop(0, D ? 'rgba(212,162,64,0.09)' : 'rgba(201,147,104,0.14)');
   radG.addColorStop(1, 'transparent');
-  ctx.fillStyle = radG;
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = radG; ctx.fillRect(0, 0, W, H);
 
-  // ── Layout constants ──────────────────────────────────────────
-  const OP = 44;         // outer padding from canvas edges
-  const CP = 38;         // content padding inside cards
-  const CARD_R = 24;
-  const L = OP + CP;     // left text anchor
-  const R = W - OP - CP; // right text anchor
-  let y = 52;
+  // ── Layout constants ──────────────────────────────────────────────────────
+  const OP = 56;   // outer canvas margin
+  const CP = 44;   // card inner horizontal padding
+  const R  = W - OP - CP;   // right text anchor (inside card)
+  const L  = OP + CP;       // left  text anchor (inside card)
+  const CW = R - L;         // usable inner width
 
-  // ═══════════════════════════════════════════
-  // SECTION 1 — HEADER
-  // ═══════════════════════════════════════════
+  const pct = Math.min(100, Math.round(stats.spentPercentage));
+  const sk  = stats.comfortLevel;
 
-  // Decorative ring mark for app identity
-  ctx.globalAlpha = 0.55;
-  ctx.strokeStyle = C.accent;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(W / 2, y + 12, 15, 0, Math.PI * 2);
-  ctx.stroke();
+  // y = top of the next element to draw
+  let y = 60;
+
+  // ══════════════════════════════════════════════
+  // 1. HEADER
+  // ══════════════════════════════════════════════
+
+  // Decorative ring + center dot
+  ctx.globalAlpha = 0.45;
+  ctx.strokeStyle = C.acc; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(W / 2, y + 14, 14, 0, Math.PI * 2); ctx.stroke();
   ctx.globalAlpha = 1;
-  ctx.fillStyle = C.accent;
-  ctx.beginPath();
-  ctx.arc(W / 2, y + 12, 5, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = C.acc;
+  ctx.beginPath(); ctx.arc(W / 2, y + 14, 5, 0, Math.PI * 2); ctx.fill();
+  y += 38; // clear ring
 
-  y += 44;
-  txt(ctx, 'احسبها صح', 40, 800, C.accent, 'center', W / 2, y);
-  y += 46;
-  txt(ctx, 'ملخص خطة الزواج', 22, 500, C.textSec, 'center', W / 2, y);
+  // App name — 52px bold (Cairo ascent ≈ 0.81 × sz ≈ 42)
+  t(ctx, 'احسبها صح', 52, 800, C.acc, 'center', W / 2, y + 42);
+  y += 60;
+
+  // Subtitle — 26px medium (ascent ≈ 21)
+  t(ctx, 'ملخص خطة الزواج', 26, 500, C.sec, 'center', W / 2, y + 21);
   y += 36;
-  txt(ctx, `خطة زواج ${name}`, 28, 700, C.textPri, 'center', W / 2, y);
-  y += 16;
 
-  // ═══════════════════════════════════════════
-  // SECTION 2 — HERO BUDGET CARD
-  // ═══════════════════════════════════════════
+  // Plan title — 34px bold (ascent ≈ 27)
+  t(ctx, `خطة زواج ${name}`, 34, 700, C.pri, 'center', W / 2, y + 27);
+  y += 46;
 
-  y += 22;
-  const heroX = OP, heroY = y, heroW = W - OP * 2, heroH = 350;
+  // ══════════════════════════════════════════════
+  // 2. BUDGET HERO CARD
+  // ══════════════════════════════════════════════
 
-  card(ctx, heroX, heroY, heroW, heroH, CARD_R, C.card, C.cardBorder, C.cardShadow);
-  goldBar(ctx, heroX, heroY, heroW, heroH, CARD_R, C.accentDark, C.accent, D ? 'rgba(212,162,64,0.25)' : '#F5E3D0');
+  y += 30;
+  const heroX = OP, heroY = y, heroW = W - OP * 2, heroH = 326;
 
-  let hy = heroY + CP + 8;
+  drawCard(ctx, heroX, heroY, heroW, heroH, 22, C.card, C.cardBd, C.cardSh);
+  goldBarTop(ctx, heroX, heroY, heroW, heroH, 22, C.accDk, C.acc, D ? 'rgba(212,162,64,0.22)' : '#F5E3D0');
 
-  // "نظرة الميزانية" section title
-  txt(ctx, 'نظرة الميزانية', 17, 600, C.textTer, 'right', R, hy);
+  // hy = distance from heroY top to the current drawing row
+  let hy = 38;
 
-  // Budget comfort level pill — top-left of card
-  const sk = stats.comfortLevel;
-  const sColor = STATUS_COLOR[sk] ?? C.accent;
-  const sBg    = STATUS_BG[sk]    ?? C.accentFade;
-  const sLabel = STATUS_LABEL[sk] ?? 'متوازن';
-  ctx.font = `700 17px "Cairo", system-ui, Arial, sans-serif`;
-  const pillTW = ctx.measureText(sLabel).width;
-  const pillPX = 14, pillH = 26;
-  const pillW = pillTW + pillPX * 2;
-  const pillX = L;
-  const pillY = hy - 19;
-  ctx.fillStyle = sBg;
-  rr(ctx, pillX, pillY, pillW, pillH, pillH / 2);
-  ctx.fill();
-  ctx.strokeStyle = sColor;
-  ctx.lineWidth = 1;
-  rr(ctx, pillX, pillY, pillW, pillH, pillH / 2);
-  ctx.stroke();
-  txt(ctx, sLabel, 17, 700, sColor, 'center', pillX + pillW / 2, pillY + 18);
+  // ── Row A: status pill (left) + remaining label (right) — same baseline ──
 
-  hy += 34;
+  const sLbl = SK_LBL[sk] ?? 'متوازن';
+  const sClr = SK_CLR[sk] ?? C.acc;
+  const sBg  = SK_BG[sk]  ?? C.accFd;
 
-  // Big remaining amount
-  txt(ctx, formatCurrency(Math.max(0, stats.remaining)), 64, 800, C.textPri, 'right', R, hy);
-  hy += 28;
-  txt(ctx, 'المتبقي من ميزانيتك', 18, 500, C.textSec, 'right', R, hy);
-  hy += 26;
+  // Status pill
+  ctx.font = `700 16px "Cairo", system-ui, Arial, sans-serif`;
+  const sTW = ctx.measureText(sLbl).width;
+  const sPadX = 18, sPillH = 30, sPillW = sTW + sPadX * 2;
+  const sPillX = heroX + CP;
+  const sPillY = heroY + hy;
+  ctx.fillStyle = sBg; rr(ctx, sPillX, sPillY, sPillW, sPillH, sPillH / 2); ctx.fill();
+  ctx.strokeStyle = sClr; ctx.lineWidth = 1.2;
+  rr(ctx, sPillX, sPillY, sPillW, sPillH, sPillH / 2); ctx.stroke();
+  t(ctx, sLbl, 16, 700, sClr, 'center', sPillX + sPillW / 2, heroY + hy + 21);
 
-  // Thin separator
-  ctx.strokeStyle = C.sep;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(L, hy);
-  ctx.lineTo(R, hy);
-  ctx.stroke();
+  // Remaining label — right side, aligned with pill center
+  t(ctx, 'المتبقي من الميزانية', 19, 500, C.sec, 'right', heroX + heroW - CP, heroY + hy + 21);
+  hy += 46; // clear pill row + gap
+
+  // ── Row B: big remaining value (68px) ────────────────────────────────────
+  // ascent ≈ 55px — ensure enough clearance from Row A
+  amt(ctx, formatCurrency(Math.max(0, stats.remaining)), 68, 800, C.pri,
+    'right', heroX + heroW - CP, heroY + hy + 55);
+  hy += 76; // 68 + descenders
+
+  // ── Divider ───────────────────────────────────────────────────────────────
+  hy += 14;
+  sepLine(ctx, heroX + CP, heroX + heroW - CP, heroY + hy, C.sep);
   hy += 22;
 
-  // 3-column stats row (الميزانية | المصروف | نسبة الصرف)
-  const pct = Math.min(100, Math.round(stats.spentPercentage));
-  const cols3 = [
-    { label: 'نسبة الصرف',           value: `${pct}%`,                               accent: false },
-    { label: 'المصروف',               value: formatCurrency(stats.totalSpent),         accent: true  },
-    { label: 'الميزانية الإجمالية',   value: formatCurrency(stats.totalBudget),         accent: false },
+  // ── Row C: 3-column stats ─────────────────────────────────────────────────
+  // Columns ordered right-to-left: الميزانية الإجمالية | المصروف | نسبة الصرف
+  const colW = CW / 3;
+  const statDefs = [
+    { lbl: 'نسبة الصرف',           val: `${pct}%`,                        hi: false },
+    { lbl: 'المصروف',               val: formatCurrency(stats.totalSpent),  hi: true  },
+    { lbl: 'الميزانية الإجمالية',  val: formatCurrency(stats.totalBudget), hi: false },
   ];
-  const c3W = (heroW - CP * 2) / 3;
-  cols3.forEach((col, i) => {
-    const cx = heroX + CP + c3W * (i + 0.5);
-    txt(ctx, col.value, 24, 700, col.accent ? C.accent : C.textPri, 'center', cx, hy + 24);
-    txt(ctx, col.label, 15, 400, C.textTer, 'center', cx, hy + 46);
-    // Column divider
+
+  statDefs.forEach((s, i) => {
+    const colRA = L + colW * (i + 1) - 10;
+    // Values drawn LTR to prevent bidi reordering of currency prefix
+    amt(ctx, s.val, 22, 700, s.hi ? C.acc : C.pri, 'right', colRA, heroY + hy + 19);
+    // Labels drawn RTL (pure Arabic)
+    t(ctx, s.lbl, 16, 400, C.ter, 'right', colRA, heroY + hy + 46);
     if (i < 2) {
-      ctx.strokeStyle = C.sep;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(heroX + CP + c3W * (i + 1), hy + 4);
-      ctx.lineTo(heroX + CP + c3W * (i + 1), hy + 52);
-      ctx.stroke();
+      sepLine(ctx,
+        L + colW * (i + 1), L + colW * (i + 1),
+        heroY + hy + 6, C.sep);
     }
   });
-  hy += 62;
+  hy += 58;
 
-  // Progress bar
-  const pbX = heroX + CP, pbW = heroW - CP * 2, pbH = 10;
-  progressBar(ctx, pbX, hy, pbW, pbH, pct, C.progBg, C.accentDark, C.accent);
+  // ── Progress bar (14px tall) ──────────────────────────────────────────────
+  hy += 14;
+  pgBar(ctx, heroX + CP, heroY + hy, heroW - CP * 2, 14, pct, C.pgBg, C.accDk, C.acc);
+  // remaining space to heroH bottom ≈ 326 - (hy + 14) - 38 = safe padding
 
   y = heroY + heroH;
 
-  // ═══════════════════════════════════════════
-  // SECTION 3 — METRIC CARDS GRID (2×2)
-  // ═══════════════════════════════════════════
+  // ══════════════════════════════════════════════
+  // 3. METRIC CARDS — 2 × 2
+  // ══════════════════════════════════════════════
 
-  y += 20;
-  txt(ctx, 'نظرة سريعة', 16, 700, C.textTer, 'right', R, y + 16);
+  y += 32;
+
+  // Section label with accent dot
+  ctx.fillStyle = C.acc;
+  ctx.beginPath(); ctx.arc(R - 5, y + 11, 4, 0, Math.PI * 2); ctx.fill();
+  t(ctx, 'نظرة سريعة', 20, 700, C.ter, 'right', R - 18, y + 16);
   y += 34;
 
-  const MGAP = 12;
-  const mW = (W - OP * 2 - MGAP) / 2;
-  const mH = 98;
+  const MGAP = 14;
+  const mW   = (W - OP * 2 - MGAP) / 2;
+  const mH   = 120;
+  const mIP  = 24;
 
   const metrics = [
     {
-      label: 'باقي على الزواج',
-      value: stats.daysRemaining !== null ? String(Math.abs(stats.daysRemaining)) : '—',
-      unit:  stats.daysRemaining !== null
+      lbl:  'باقي على الزواج',
+      val:  stats.daysRemaining !== null ? String(Math.abs(stats.daysRemaining)) : '—',
+      unit: stats.daysRemaining !== null
         ? (stats.daysRemaining >= 0 ? 'يوم متبقي' : 'يوم مضى')
-        : 'لم تُحدَّد التاريخ',
+        : 'لم تُحدَّد',
+      isAmt: false,
     },
     {
-      label: 'إنجاز الخطة',
-      value: totalItems > 0 ? `${paidItems} / ${totalItems}` : '—',
-      unit:  totalItems > 0 ? 'بند منجز' : 'لا يوجد بنود',
+      lbl:  'إنجاز الخطة',
+      val:  totalItems > 0 ? `${paidItems} / ${totalItems}` : '—',
+      unit: totalItems > 0 ? 'بند منجز' : 'لا توجد بنود',
+      isAmt: false,
     },
     {
-      label: 'المساهمات',
-      value: stats.totalSupportReceived > 0 ? formatCurrency(stats.totalSupportReceived) : '—',
-      unit:  stats.totalSupportReceived > 0 ? 'مُستلمة' : 'لا توجد مساهمات',
+      lbl:  'احتياطي الطوارئ',
+      val:  stats.emergencyReserve > 0 ? formatCurrency(stats.emergencyReserve) : '—',
+      unit: stats.emergencyReserve > 0 ? 'مُخصَّص' : 'غير محدد',
+      isAmt: stats.emergencyReserve > 0,
     },
     {
-      label: 'احتياطي الطوارئ',
-      value: stats.emergencyReserve > 0 ? formatCurrency(stats.emergencyReserve) : '—',
-      unit:  stats.emergencyReserve > 0 ? 'مُخصَّص' : 'غير مُحدَّد',
+      lbl:  'المساهمات',
+      val:  stats.totalSupportReceived > 0 ? formatCurrency(stats.totalSupportReceived) : '—',
+      unit: stats.totalSupportReceived > 0 ? 'مُستلمة' : 'لا توجد مساهمات',
+      isAmt: stats.totalSupportReceived > 0,
     },
   ];
 
   for (let i = 0; i < 4; i++) {
     const col = i % 2;
     const row = Math.floor(i / 2);
-    const mx = OP + col * (mW + MGAP);
-    const my = y + row * (mH + MGAP);
-    const m = metrics[i];
+    const mx  = OP + col * (mW + MGAP);
+    const my  = y + row * (mH + MGAP);
+    const m   = metrics[i];
 
-    card(ctx, mx, my, mW, mH, 18, C.card, C.cardBorder, C.cardShadow);
+    drawCard(ctx, mx, my, mW, mH, 16, C.card, C.cardBd, C.cardSh);
 
-    const mIP = 20;
-    txt(ctx, m.label, 16, 600, C.textTer,  'right', mx + mW - mIP, my + mIP + 14);
-    txt(ctx, m.value, 26, 800, C.textPri,  'right', mx + mW - mIP, my + mIP + 46);
-    txt(ctx, m.unit,  14, 400, C.textSec,  'right', mx + mW - mIP, my + mIP + 68);
+    const mR = mx + mW - mIP;
+    // Label (top)
+    t(ctx, m.lbl,  17, 600, C.sec, 'right', mR, my + mIP + 14);
+    // Value (middle) — LTR for currency, LTR-number for numerics
+    if (m.isAmt) {
+      amt(ctx, m.val, 28, 800, C.pri, 'right', mR, my + mIP + 52);
+    } else {
+      t(ctx, m.val, 28, 800, C.pri, 'right', mR, my + mIP + 52, 'ltr');
+    }
+    // Unit (bottom)
+    t(ctx, m.unit, 16, 400, C.sec, 'right', mR, my + mIP + 84);
   }
 
   y += mH * 2 + MGAP;
 
-  // ═══════════════════════════════════════════
-  // SECTION 4 — TOP PLANNING ITEMS
-  // ═══════════════════════════════════════════
+  // ══════════════════════════════════════════════
+  // 4. TOP PLANNING ITEMS
+  // ══════════════════════════════════════════════
 
-  y += 20;
-  txt(ctx, 'أبرز البنود', 16, 700, C.textTer, 'right', R, y + 16);
+  y += 28;
+
+  // Section label
+  ctx.fillStyle = C.acc;
+  ctx.beginPath(); ctx.arc(R - 5, y + 11, 4, 0, Math.PI * 2); ctx.fill();
+  t(ctx, 'أبرز البنود', 20, 700, C.ter, 'right', R - 18, y + 16);
   y += 34;
 
   if (topCats.length === 0) {
-    card(ctx, OP, y, W - OP * 2, 82, 18, C.card, C.cardBorder, C.cardShadow);
-    txt(ctx, 'ابدأ بإضافة أول بند في خطة الزواج', 20, 500, C.textSec, 'center', W / 2, y + 46);
-    y += 82;
+    // Refined empty state card
+    const eH = 100;
+    drawCard(ctx, OP, y, W - OP * 2, eH, 16, C.card, C.cardBd, C.cardSh);
+    const ecy = y + eH / 2;
+    // Small decorative mark
+    t(ctx, '✦', 16, 400, C.ter, 'center', W / 2, ecy - 12);
+    t(ctx, 'ابدأ بإضافة أول بند في خطة الزواج', 21, 500, C.sec, 'center', W / 2, ecy + 18);
+    y += eH;
   } else {
-    const IGAP = 12;
-    const IH = 110;
+    const IH   = 84;
+    const IGAP = 9;
+    const iIP  = 26;
 
-    for (const cat of topCats) {
+    for (let ci = 0; ci < topCats.length; ci++) {
+      const cat    = topCats[ci];
       const catPct = cat.total > 0 ? Math.min(100, (cat.paid / cat.total) * 100) : 0;
       const catRem = Math.max(0, cat.total - cat.paid);
 
-      card(ctx, OP, y, W - OP * 2, IH, 18, C.card, C.cardBorder, C.cardShadow);
+      drawCard(ctx, OP, y, W - OP * 2, IH, 16, C.card, C.cardBd, C.cardSh);
 
-      const iIP = 26;
       const iR = W - OP - iIP;
       const iL = OP + iIP;
 
-      // Category name (right) + remaining (left accent)
-      txt(ctx, cat.name,               26, 700, C.textPri, 'right', iR, y + iIP + 20);
-      txt(ctx, formatCurrency(catRem), 22, 700, C.accent,  'left',  iL, y + iIP + 20);
+      // Row 1: category name (right) + remaining (left, accent)
+      t(ctx,   cat.name,               21, 700, C.pri, 'right', iR, y + iIP + 17);
+      amt(ctx, formatCurrency(catRem), 19, 700, C.acc, 'left',  iL, y + iIP + 17);
 
-      // Sub-row: planned and paid
-      txt(ctx, `المخطط: ${formatCurrency(cat.total)}`, 16, 500, C.textSec, 'right', iR, y + iIP + 48);
-      txt(ctx, `المصروف: ${formatCurrency(cat.paid)}`, 16, 500, C.textSec, 'left',  iL, y + iIP + 48);
+      // Row 2: planned | paid (15px muted)
+      t(ctx, `مخطط: ${formatCurrency(cat.total)}`, 14, 500, C.ter, 'right', iR, y + iIP + 40);
+      t(ctx, `مصروف: ${formatCurrency(cat.paid)}`, 14, 500, C.ter, 'left',  iL, y + iIP + 40);
 
-      // Mini progress bar
-      const pbY = y + IH - iIP - 2;
-      progressBar(ctx, iL, pbY, W - OP * 2 - iIP * 2, 5, catPct, C.progBg, C.accentDark, C.accent);
+      // Mini progress bar — 6px, 12px from bottom
+      const pbY = y + IH - 12 - 6;
+      pgBar(ctx, iL, pbY, W - OP * 2 - iIP * 2, 6, catPct, C.pgBg, C.accDk, C.acc);
 
-      y += IH + IGAP;
+      y += IH + (ci < topCats.length - 1 ? IGAP : 0);
     }
   }
 
-  // ═══════════════════════════════════════════
-  // SECTION 5 — FOOTER
-  // ═══════════════════════════════════════════
+  // ══════════════════════════════════════════════
+  // 5. FOOTER
+  // ══════════════════════════════════════════════
 
-  const footerY = H - 92;
+  // Always sit at least 48px above canvas bottom; push down only if content fits
+  const footerY = Math.max(y + 32, H - 120);
 
-  ctx.strokeStyle = C.sep;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(L, footerY);
-  ctx.lineTo(R, footerY);
-  ctx.stroke();
+  sepLine(ctx, L, R, footerY, C.sep);
 
-  txt(ctx, 'تم إنشاء هذا الملخص بـ احسبها صح', 18, 600, C.accent,   'center', W / 2, footerY + 28);
-  txt(ctx, 'بياناتك محفوظة على جهازك فقط  ·  مجاني بالكامل', 15, 400, C.textTer, 'center', W / 2, footerY + 54);
-
-  // URL (LTR)
-  txt(ctx, 'ehsebha-sah.pages.dev', 14, 400, C.textTer, 'center', W / 2, footerY + 76, 'ltr');
+  // Line 1: app attribution
+  t(ctx, 'تم إنشاء هذا الملخص من احسبها صح', 19, 600, C.acc,  'center', W / 2, footerY + 30);
+  // Line 2: privacy notice
+  t(ctx, 'بياناتك محفوظة على جهازك فقط',     17, 400, C.sec,  'center', W / 2, footerY + 60);
+  // Line 3: URL (LTR)
+  t(ctx, 'ehsebha-sah.pages.dev',              15, 400, C.ter,  'center', W / 2, footerY + 86, 'ltr');
 
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png'),
