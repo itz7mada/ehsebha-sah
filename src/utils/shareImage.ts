@@ -295,18 +295,17 @@ export async function generateShareImage(
   // 3. METRIC CARDS — 2 × 2
   // ══════════════════════════════════════════════
 
-  y += 32;
+  y += 30;
 
-  // Section label with accent dot
+  // Section label
   ctx.fillStyle = C.acc;
-  ctx.beginPath(); ctx.arc(R - 5, y + 11, 4, 0, Math.PI * 2); ctx.fill();
-  t(ctx, 'نظرة سريعة', 20, 700, C.ter, 'right', R - 18, y + 16);
-  y += 34;
+  ctx.beginPath(); ctx.arc(R - 5, y + 12, 4, 0, Math.PI * 2); ctx.fill();
+  t(ctx, 'نظرة سريعة', 22, 700, C.sec, 'right', R - 18, y + 18);
+  y += 36;
 
   const MGAP = 14;
   const mW   = (W - OP * 2 - MGAP) / 2;
-  const mH   = 120;
-  const mIP  = 24;
+  const mH   = 104;   // taller enough for 3 lines without crowding
 
   const metrics = [
     {
@@ -346,17 +345,17 @@ export async function generateShareImage(
 
     drawCard(ctx, mx, my, mW, mH, 16, C.card, C.cardBd, C.cardSh);
 
-    const mR = mx + mW - mIP;
-    // Label (top)
-    t(ctx, m.lbl,  17, 600, C.sec, 'right', mR, my + mIP + 14);
-    // Value (middle) — LTR for currency, LTR-number for numerics
+    const mR = mx + mW - 20;
+    // Label — top, readable (baseline my+36)
+    t(ctx, m.lbl, 18, 600, C.sec, 'right', mR, my + 36);
+    // Value — prominent (baseline my+68)
     if (m.isAmt) {
-      amt(ctx, m.val, 28, 800, C.pri, 'right', mR, my + mIP + 52);
+      amt(ctx, m.val, 26, 800, C.pri, 'right', mR, my + 68);
     } else {
-      t(ctx, m.val, 28, 800, C.pri, 'right', mR, my + mIP + 52, 'ltr');
+      t(ctx, m.val, 26, 800, C.pri, 'right', mR, my + 68, 'ltr');
     }
-    // Unit (bottom)
-    t(ctx, m.unit, 16, 400, C.sec, 'right', mR, my + mIP + 84);
+    // Unit — sub-label (baseline my+91, bottom my+95, card my+104 → 9px margin)
+    t(ctx, m.unit, 15, 400, C.sec, 'right', mR, my + 91);
   }
 
   y += mH * 2 + MGAP;
@@ -365,27 +364,30 @@ export async function generateShareImage(
   // 4. TOP PLANNING ITEMS
   // ══════════════════════════════════════════════
 
-  y += 28;
+  y += 26;
 
   // Section label
   ctx.fillStyle = C.acc;
-  ctx.beginPath(); ctx.arc(R - 5, y + 11, 4, 0, Math.PI * 2); ctx.fill();
-  t(ctx, 'أبرز البنود', 20, 700, C.ter, 'right', R - 18, y + 16);
-  y += 34;
+  ctx.beginPath(); ctx.arc(R - 5, y + 12, 4, 0, Math.PI * 2); ctx.fill();
+  t(ctx, 'أبرز البنود', 22, 700, C.sec, 'right', R - 18, y + 18);
+  y += 36;
 
   if (topCats.length === 0) {
-    // Refined empty state card
-    const eH = 100;
+    const eH = 96;
     drawCard(ctx, OP, y, W - OP * 2, eH, 16, C.card, C.cardBd, C.cardSh);
-    const ecy = y + eH / 2;
-    // Small decorative mark
-    t(ctx, '✦', 16, 400, C.ter, 'center', W / 2, ecy - 12);
-    t(ctx, 'ابدأ بإضافة أول بند في خطة الزواج', 21, 500, C.sec, 'center', W / 2, ecy + 18);
+    t(ctx, '✦', 16, 400, C.ter, 'center', W / 2, y + eH / 2 - 10);
+    t(ctx, 'ابدأ بإضافة أول بند في خطة الزواج', 21, 500, C.sec, 'center', W / 2, y + eH / 2 + 18);
     y += eH;
   } else {
-    const IH   = 84;
-    const IGAP = 9;
-    const iIP  = 26;
+    // IH=96 gives clear text → gap → progress bar with no overlap.
+    // Layout per row (positions relative to card top y):
+    //   Row 1 (name right / remaining left): baseline y+43 (26px/22px)
+    //   Row 2 (planned right / paid left):   baseline y+67 (15px muted)
+    //   Progress bar:                         top y+82, height 8px, bottom y+90
+    //   Card bottom: y+96 — 6px below bar ✓
+    const IH   = 96;
+    const IGAP = 10;
+    const iIP  = 20;   // inner horizontal padding
 
     for (let ci = 0; ci < topCats.length; ci++) {
       const cat    = topCats[ci];
@@ -397,17 +399,17 @@ export async function generateShareImage(
       const iR = W - OP - iIP;
       const iL = OP + iIP;
 
-      // Row 1: category name (right) + remaining (left, accent)
-      t(ctx,   cat.name,               21, 700, C.pri, 'right', iR, y + iIP + 17);
-      amt(ctx, formatCurrency(catRem), 19, 700, C.acc, 'left',  iL, y + iIP + 17);
+      // Row 1: name (right, 26px bold) + remaining value (left, 22px gold)
+      t(ctx,   cat.name,                26, 700, C.pri, 'right', iR, y + 43);
+      amt(ctx, formatCurrency(catRem),  22, 700, C.acc, 'left',  iL, y + 43);
 
-      // Row 2: planned | paid (15px muted)
-      t(ctx, `مخطط: ${formatCurrency(cat.total)}`, 14, 500, C.ter, 'right', iR, y + iIP + 40);
-      t(ctx, `مصروف: ${formatCurrency(cat.paid)}`, 14, 500, C.ter, 'left',  iL, y + iIP + 40);
+      // Row 2: planned (right, 15px muted) + paid (left, 15px muted)
+      // Row 2 top ≈ y+53, clear 10px gap from Row 1 bottom (y+49)
+      t(ctx, `المخطط: ${formatCurrency(cat.total)}`, 15, 500, C.ter, 'right', iR, y + 67);
+      t(ctx, `المصروف: ${formatCurrency(cat.paid)}`,  15, 500, C.ter, 'left',  iL, y + 67);
 
-      // Mini progress bar — 6px, 12px from bottom
-      const pbY = y + IH - 12 - 6;
-      pgBar(ctx, iL, pbY, W - OP * 2 - iIP * 2, 6, catPct, C.pgBg, C.accDk, C.acc);
+      // Progress bar — positioned well below all text (Row 2 bottom ≈ y+71, gap=11px)
+      pgBar(ctx, iL, y + 82, W - OP * 2 - iIP * 2, 8, catPct, C.pgBg, C.accDk, C.acc);
 
       y += IH + (ci < topCats.length - 1 ? IGAP : 0);
     }
@@ -417,17 +419,17 @@ export async function generateShareImage(
   // 5. FOOTER
   // ══════════════════════════════════════════════
 
-  // Always sit at least 48px above canvas bottom; push down only if content fits
-  const footerY = Math.max(y + 32, H - 120);
+  // footerY sits at least H-112 from canvas top, never clips with content above
+  const footerY = Math.max(y + 24, H - 112);
 
   sepLine(ctx, L, R, footerY, C.sep);
 
   // Line 1: app attribution
-  t(ctx, 'تم إنشاء هذا الملخص من احسبها صح', 19, 600, C.acc,  'center', W / 2, footerY + 30);
+  t(ctx, 'تم إنشاء هذا الملخص من احسبها صح', 19, 600, C.acc,  'center', W / 2, footerY + 26);
   // Line 2: privacy notice
-  t(ctx, 'بياناتك محفوظة على جهازك فقط',     17, 400, C.sec,  'center', W / 2, footerY + 60);
-  // Line 3: URL (LTR)
-  t(ctx, 'ehsebha-sah.pages.dev',              15, 400, C.ter,  'center', W / 2, footerY + 86, 'ltr');
+  t(ctx, 'بياناتك محفوظة على جهازك فقط',     17, 400, C.sec,  'center', W / 2, footerY + 52);
+  // Line 3: URL (LTR) — tighter spacing ensures it stays within canvas
+  t(ctx, 'ehsebha-sah.pages.dev',              14, 400, C.ter,  'center', W / 2, footerY + 74, 'ltr');
 
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png'),
