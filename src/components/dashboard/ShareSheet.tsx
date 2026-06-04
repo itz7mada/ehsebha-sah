@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
 import { Button } from '../common/Button';
 import { formatCurrency } from '../../utils/formatting';
-import { generateShareImage } from '../../utils/shareImage';
+import { generateShareImage, type ShareTopCat } from '../../utils/shareImage';
 import type { Settings, BudgetStats, Category, ExpenseItem } from '../../types';
 
 interface ShareSheetProps {
@@ -18,13 +18,14 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
   const [generating, setGenerating] = useState(false);
   const [done, setDone] = useState(false);
 
-  const topCats = useMemo(() => {
-    const map: Record<string, { name: string; total: number }> = {};
+  const topCats = useMemo((): ShareTopCat[] => {
+    const map: Record<string, ShareTopCat> = {};
     for (const exp of expenses) {
       const cat = categories.find(c => c.id === exp.categoryId);
       if (!cat || !cat.isActive) continue;
-      if (!map[cat.id]) map[cat.id] = { name: cat.name, total: 0 };
+      if (!map[cat.id]) map[cat.id] = { name: cat.name, total: 0, paid: 0 };
       map[cat.id].total += exp.expectedAmount;
+      map[cat.id].paid  += exp.paidAmount;
     }
     return Object.values(map)
       .filter(c => c.total > 0)
@@ -32,10 +33,13 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
       .slice(0, 3);
   }, [expenses, categories]);
 
+  const paidItems  = useMemo(() => expenses.filter(e => e.status === 'paid').length, [expenses]);
+  const totalItems = expenses.length;
+
   async function handleShare() {
     setGenerating(true);
     try {
-      const blob = await generateShareImage(settings.name, stats, topCats);
+      const blob = await generateShareImage(settings.name, stats, topCats, paidItems, totalItems);
       const file = new File([blob], 'خطة-زواجي.png', { type: 'image/png' });
 
       // 1. Image share (native share sheet with file)
