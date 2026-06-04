@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { BudgetHero } from '../components/dashboard/BudgetHero';
+import { ShareSheet } from '../components/dashboard/ShareSheet';
 import { SectionCard } from '../components/expenses/SectionCard';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
-import { PlusIcon } from '../components/common/Icons';
+import { PlusIcon, ShareIcon } from '../components/common/Icons';
 import { getDaysLabel, maskAmount, parseCurrencyInput, formatCurrency, now, generateId, normalizeDigits } from '../utils/formatting';
 import * as db from '../db/database';
 import type { Category } from '../types';
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [hideAmounts, setHideAmounts] = useState(
     () => localStorage.getItem('hideAmounts') === 'true'
   );
+
+  const [showShareSheet, setShowShareSheet] = useState(false);
 
   // Emergency reserve sheet state
   const [showReserveSheet, setShowReserveSheet] = useState(false);
@@ -167,8 +170,19 @@ export default function Dashboard() {
 
         {/* Header */}
         <header style={headerStyle}>
-          <h1 style={titleStyle}>خلنا نحسبها صح</h1>
-          <p style={subtitleStyle}>نظرة سريعة على وضعك قبل يوم الزواج</p>
+          <div style={{ flex: 1 }}>
+            <h1 style={titleStyle}>خلنا نحسبها صح</h1>
+            <p style={subtitleStyle}>نظرة سريعة على وضعك قبل يوم الزواج</p>
+          </div>
+          <button
+            type="button"
+            style={shareButtonStyle}
+            onClick={() => setShowShareSheet(true)}
+            aria-label="شارك خطتك"
+          >
+            <ShareIcon size={16} color="var(--accent)" />
+            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)' }}>شارك</span>
+          </button>
         </header>
 
         {/* Main budget card */}
@@ -482,6 +496,18 @@ export default function Dashboard() {
           )}
         </div>
       </BottomSheet>
+
+      {/* Share sheet */}
+      {settings && stats && (
+        <ShareSheet
+          isOpen={showShareSheet}
+          onClose={() => setShowShareSheet(false)}
+          settings={settings}
+          stats={stats}
+          categories={categories}
+          expenses={expenses}
+        />
+      )}
     </div>
   );
 }
@@ -539,8 +565,25 @@ const contentStyle: React.CSSProperties = {
 
 const headerStyle: React.CSSProperties = {
   display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: 'var(--space-3)',
+};
+
+const shareButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '8px 14px',
+  borderRadius: 'var(--radius-full)',
+  background: 'var(--accent-light)',
+  border: '1px solid var(--accent)',
+  cursor: 'pointer',
+  flexShrink: 0,
+  marginTop: '2px',
+  WebkitTapHighlightColor: 'transparent',
+  transition: 'opacity var(--transition-fast)',
 };
 
 const titleStyle: React.CSSProperties = {
