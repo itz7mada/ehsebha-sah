@@ -95,9 +95,26 @@ export function validateBackupFile(data: unknown): data is BackupData {
   return true;
 }
 
+/** Local YYYY-MM-DD for date inputs (avoids UTC timezone shift). */
+export function getTodayDateInputValue(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/** True if a YYYY-MM-DD string is strictly before local today. */
+export function isPastDate(dateStr: string): boolean {
+  if (!dateStr) return false;
+  // ISO date strings (YYYY-MM-DD) sort lexicographically == chronologically.
+  return dateStr < getTodayDateInputValue();
+}
+
 export function validateWeddingDate(dateStr: string): string | null {
-  if (!dateStr) return 'تاريخ الزواج مطلوب';
+  if (!dateStr) return 'اختر تاريخ الزواج';
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return 'التاريخ غير صحيح';
+  if (isPastDate(dateStr)) return 'تاريخ الزواج لازم يكون اليوم أو بعده';
   return null;
 }

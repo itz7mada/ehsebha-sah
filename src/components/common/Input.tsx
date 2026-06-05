@@ -14,6 +14,7 @@ interface InputProps {
   hint?: string;
   multiline?: boolean;
   rows?: number;
+  min?: string;
 }
 
 export function Input({
@@ -29,6 +30,7 @@ export function Input({
   hint,
   multiline = false,
   rows = 3,
+  min,
 }: InputProps) {
   const [focused, setFocused] = React.useState(false);
   const inputId = React.useId();
@@ -130,6 +132,7 @@ export function Input({
             type={type === 'number' ? 'text' : type}
             inputMode={type === 'number' ? 'decimal' : undefined}
             pattern={type === 'number' ? '[0-9]*' : undefined}
+            min={type === 'date' ? min : undefined}
             value={value}
             onChange={(e) => onChange(type === 'number' ? normalizeDigits(e.target.value) : e.target.value)}
             placeholder={placeholder}

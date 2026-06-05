@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import { validateWeddingDate } from '../../utils/validation';
+import { validateWeddingDate, getTodayDateInputValue } from '../../utils/validation';
 
 interface Step3DateProps {
   value: string;
@@ -9,8 +9,11 @@ interface Step3DateProps {
 }
 
 export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
-  const today = new Date().toISOString().split('T')[0];
-  const canProceed = validateWeddingDate(value) === null;
+  const today = getTodayDateInputValue();
+  const error = validateWeddingDate(value);
+  const canProceed = error === null;
+  // Only surface the error once the user has actually picked a date.
+  const showError = !!value && !!error;
 
   return (
     <div style={screen}>
@@ -39,7 +42,9 @@ export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
               </svg>
             </span>
           </div>
-          <p style={hint}>تقدر تعدله لاحقاً.</p>
+          {showError
+            ? <p style={errorText}>{error}</p>
+            : <p style={hint}>تقدر تعدله لاحقاً من الإعدادات.</p>}
         </div>
 
         <div style={{ flex: 1 }} />
@@ -67,3 +72,4 @@ const dateWrap: React.CSSProperties = { position: 'relative', marginTop: '6px', 
 const dateInput: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '16px', color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) 44px var(--space-3) var(--space-4)', direction: 'ltr', cursor: 'pointer', width: '100%', minWidth: 0 };
 const calIconStyle: React.CSSProperties = { position: 'absolute', right: 'var(--space-4)', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 };
 const hint: React.CSSProperties = { margin: 'var(--space-3) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.5 };
+const errorText: React.CSSProperties = { margin: 'var(--space-3) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--danger)', fontWeight: 600, lineHeight: 1.5 };
