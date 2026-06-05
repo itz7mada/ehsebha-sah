@@ -66,7 +66,11 @@ function diamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: nu
   ctx.fill();
 }
 
-/** Glowing progress bar — adds a 2px highlight at the fill leading edge. */
+/**
+ * Glowing progress bar — RTL: track is full width, fill is anchored to the
+ * physical RIGHT edge and grows toward the LEFT (correct for Arabic UI).
+ * The glow tip sits at the LEFT end of the fill (its leading edge).
+ */
 function pgBarGlow(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number, pct: number,
@@ -77,18 +81,21 @@ function pgBarGlow(
   ctx.fill();
   const fw = Math.max(pct > 0 ? h : 0, Math.min(w * pct / 100, w));
   if (fw > 0) {
-    const g = ctx.createLinearGradient(x, 0, x + fw, 0);
-    g.addColorStop(0, ca); g.addColorStop(0.7, cb); g.addColorStop(1, cb);
+    // Anchor fill to the right edge: fillX = x + w - fw
+    const fx = x + w - fw;
+    // Gradient runs right→left: solid (cb) at the right edge, darker (ca) at the left tip
+    const g = ctx.createLinearGradient(x + w, 0, fx, 0);
+    g.addColorStop(0, cb); g.addColorStop(0.3, cb); g.addColorStop(1, ca);
     ctx.fillStyle = g;
-    rr(ctx, x, y, fw, h, h / 2);
+    rr(ctx, fx, y, fw, h, h / 2);
     ctx.fill();
-    // Subtle glow tip
+    // Subtle glow tip at the LEFT (leading) end of the fill
     if (fw < w - 4) {
       ctx.save();
       ctx.shadowColor = cb; ctx.shadowBlur = 8;
       ctx.fillStyle = 'rgba(255,220,120,0.55)';
       ctx.beginPath();
-      ctx.arc(x + fw, y + h / 2, h / 2, 0, Math.PI * 2);
+      ctx.arc(fx, y + h / 2, h / 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
