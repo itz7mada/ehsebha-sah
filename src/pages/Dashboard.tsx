@@ -639,7 +639,7 @@ const infoCardActionStyle: React.CSSProperties = {
 };
 
 const sectionTitleStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-base)',
+  fontSize: 'var(--font-size-md)',
   fontWeight: 700,
   color: 'var(--text-primary)',
   margin: 0,

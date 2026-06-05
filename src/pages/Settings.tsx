@@ -18,6 +18,7 @@ import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import {
   DownloadIcon, UploadIcon, TrashIcon,
   CalendarIcon, WalletIcon, AlertIcon, HomeIcon, SunIcon, MoonIcon,
+  ChevronRightIcon, CheckIcon,
 } from '../components/common/Icons';
 
 type ModalType = 'date' | 'budget' | 'housing' | null;
@@ -180,7 +181,7 @@ export default function Settings() {
       }
       await db.importBackup(data);
       await refreshData();
-      setImportMsg({ text: 'تم استيراد البيانات بنجاح! 🎉', ok: true });
+      setImportMsg({ text: 'تم استيراد البيانات بنجاح.', ok: true });
     } catch {
       setImportMsg({ text: 'حدث خطأ أثناء الاستيراد. تأكد من أن الملف بصيغة JSON صحيحة.', ok: false });
     }
@@ -639,7 +640,7 @@ export default function Settings() {
                 <span style={{ flex: 1, fontSize: 'var(--font-size-base)', fontWeight: selected ? 700 : 500, color: selected ? 'var(--accent)' : 'var(--text-primary)' }}>
                   {HOUSING_LABELS[opt]}
                 </span>
-                {selected && <span style={{ color: 'var(--accent)', fontWeight: 700 }}>✓</span>}
+                {selected && <CheckIcon size={16} color="var(--accent)" />}
               </button>
             );
           })}
@@ -795,7 +796,7 @@ function SettingsRow({
       <span className={valueClass} style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', fontWeight: 500 }}>
         {value}
       </span>
-      <span style={{ color: 'var(--text-tertiary)', marginRight: 'var(--space-1)' }}>›</span>
+      <ChevronRightIcon size={16} color="var(--text-tertiary)" />
     </button>
   );
 }
@@ -833,7 +834,7 @@ function ActionRow({
       <span style={{ flex: 1, fontSize: 'var(--font-size-base)', color: labelColor ?? 'var(--text-primary)', fontWeight: 500 }}>
         {label}
       </span>
-      <span style={{ color: 'var(--text-tertiary)' }}>›</span>
+      <ChevronRightIcon size={16} color="var(--text-tertiary)" />
     </button>
   );
 }

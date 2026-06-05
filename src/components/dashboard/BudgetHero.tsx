@@ -26,6 +26,17 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
 
   return (
     <div style={cardStyle}>
+      {/* Premium gold top accent bar */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        insetInlineStart: 0,
+        insetInlineEnd: 0,
+        height: '3px',
+        background: 'linear-gradient(90deg, var(--accent-dark), var(--accent), var(--accent-light))',
+        borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0',
+      }} />
+
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={cardLabelStyle}>نظرة الميزانية</span>
@@ -69,14 +80,17 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
         </span>
       </div>
 
-      {/* Progress bar */}
+      {/* Progress bar — fills from reading-start (physical right in RTL) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={progressTrackStyle}>
           <div
             style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              insetInlineStart: 0,
               width: `${pct}%`,
-              height: '100%',
-              background: `linear-gradient(90deg, ${progressColor}CC, ${progressColor})`,
+              background: `linear-gradient(to inline-end, ${progressColor}99, ${progressColor})`,
               borderRadius: 'inherit',
               transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
             }}
@@ -159,19 +173,13 @@ const pillStyle: React.CSSProperties = {
   border: '1px solid transparent',
 };
 
-const amountSubLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-xs)',
-  color: 'var(--text-tertiary)',
-  fontWeight: 500,
-  marginTop: '4px',
-};
-
 const progressTrackStyle: React.CSSProperties = {
   width: '100%',
   height: '8px',
   background: 'var(--border)',
   borderRadius: 'var(--radius-full)',
   overflow: 'hidden',
+  position: 'relative',
 };
 
 const progressLabelStyle: React.CSSProperties = {

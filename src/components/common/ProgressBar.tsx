@@ -26,8 +26,13 @@ export function ProgressBar({
     position: 'relative',
   };
 
+  // Fill anchored at inset-inline-start so it grows from the reading-start edge:
+  // RTL → physical right; LTR → physical left. Correct for Arabic progress indicators.
   const fillStyle: React.CSSProperties = {
-    height: '100%',
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    insetInlineStart: 0,
     width: `${clamped}%`,
     background: color,
     borderRadius: 'var(--radius-full)',

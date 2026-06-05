@@ -165,7 +165,10 @@ export function Sections() {
       <div className="page-content pb-safe animate-fade-in">
         {activeCategories.length === 0 ? (
           <div className="empty-state">
-            <h3>لا توجد بنود رئيسية بعد</h3>
+            <div className="empty-icon">
+              <PlusIcon size={24} color="var(--text-tertiary)" />
+            </div>
+            <h3>ابدأ بخطتك</h3>
             <p>أضف أول بند رئيسي لتبدأ بتنظيم ميزانية زفافك</p>
             <div style={{ marginTop: 'var(--space-5)' }}>
               <Button variant="primary" icon={<PlusIcon size={16} />} onClick={openSheet}>
@@ -212,8 +215,17 @@ export function Sections() {
       </div>
 
       {/* Add Category Sheet */}
-      <BottomSheet isOpen={sheetOpen} onClose={() => setSheetOpen(false)} title="إضافة بند رئيسي">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', paddingBottom: 'var(--space-6)' }}>
+      <BottomSheet
+        isOpen={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title="إضافة بند رئيسي"
+        footer={
+          <Button variant="primary" size="xl" fullWidth loading={saving} onClick={handleAddCategory}>
+            إضافة البند الرئيسي
+          </Button>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.6 }}>
             أضف جزء من خطة الزواج يناسبك.
           </p>
@@ -286,10 +298,6 @@ export function Sections() {
               {newName.trim() || 'اسم البند'}
             </span>
           </div>
-
-          <Button variant="primary" fullWidth loading={saving} onClick={handleAddCategory}>
-            إضافة البند الرئيسي
-          </Button>
         </div>
       </BottomSheet>
 
