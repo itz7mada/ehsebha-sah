@@ -54,12 +54,13 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
   };
 
   const dragBarStyle: React.CSSProperties = {
-    width: '40px',
+    width: '36px',
     height: '4px',
     background: 'var(--border)',
     borderRadius: 'var(--radius-full)',
-    margin: 'var(--space-3) auto var(--space-2)',
+    margin: '12px auto 8px',
     flexShrink: 0,
+    opacity: 0.6,
   };
 
   const headerStyle: React.CSSProperties = {
@@ -72,24 +73,25 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: 'var(--font-size-md)',
-    fontWeight: 700,
+    fontSize: 'var(--font-size-lg)',
+    fontWeight: 800,
     color: 'var(--text-primary)',
   };
 
   const closeBtnStyle: React.CSSProperties = {
-    width: '32px',
-    height: '32px',
+    width: '40px',
+    height: '40px',
     borderRadius: 'var(--radius-full)',
     background: 'var(--bg-secondary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    border: 'none',
+    border: '1px solid var(--border-light)',
     color: 'var(--text-secondary)',
     flexShrink: 0,
     transition: 'background var(--transition-fast)',
+    WebkitTapHighlightColor: 'transparent',
   };
 
   const bodyStyle: React.CSSProperties = {

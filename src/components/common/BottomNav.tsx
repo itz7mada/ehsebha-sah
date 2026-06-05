@@ -82,12 +82,12 @@ export function BottomNav() {
                 }}>
                   <item.icon size={28} color={isActive ? 'var(--accent)' : 'var(--text-secondary)'} />
                   <span style={{
-                    fontSize: '11px',
+                    fontSize: '12px',
                     fontWeight: 800,
                     color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                     transition: 'color var(--transition-fast)',
                     lineHeight: 1,
-                    letterSpacing: '-0.02em',
+                    letterSpacing: '-0.01em',
                   }}>
                     {item.label}
                   </span>
@@ -113,11 +113,11 @@ export function BottomNav() {
               }}
               aria-current={isActive ? 'page' : undefined}
             >
-              <item.icon size={22} color={isActive ? 'var(--accent)' : 'var(--text-tertiary)'} />
+              <item.icon size={22} color={isActive ? 'var(--accent)' : 'var(--text-secondary)'} />
               <span style={{
-                fontSize: '10px',
+                fontSize: '11px',
                 fontWeight: isActive ? 700 : 500,
-                color: isActive ? 'var(--accent)' : 'var(--text-tertiary)',
+                color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                 transition: 'color var(--transition-fast)',
                 lineHeight: 1,
               }}>

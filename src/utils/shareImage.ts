@@ -23,23 +23,6 @@ function rr(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: n
   ctx.closePath();
 }
 
-function pgBar(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, w: number, h: number, pct: number,
-  bg: string, ca: string, cb: string,
-) {
-  ctx.fillStyle = bg;
-  rr(ctx, x, y, w, h, h / 2);
-  ctx.fill();
-  const fw = Math.max(pct > 0 ? h : 0, Math.min(w * pct / 100, w));
-  if (fw > 0) {
-    const g = ctx.createLinearGradient(x, 0, x + fw, 0);
-    g.addColorStop(0, ca); g.addColorStop(1, cb);
-    ctx.fillStyle = g;
-    rr(ctx, x, y, fw, h, h / 2);
-    ctx.fill();
-  }
-}
 
 function drawCard(
   ctx: CanvasRenderingContext2D,
@@ -65,10 +48,51 @@ function goldBarTop(
   rr(ctx, x, y, w, h, r);
   ctx.clip();
   const g = ctx.createLinearGradient(x, 0, x + w, 0);
-  g.addColorStop(0, ca); g.addColorStop(0.55, cm); g.addColorStop(1, cb);
+  g.addColorStop(0, ca); g.addColorStop(0.45, cm); g.addColorStop(0.75, cm); g.addColorStop(1, cb);
   ctx.fillStyle = g;
-  ctx.fillRect(x, y, w, 5);
+  ctx.fillRect(x, y, w, 7); // 7px premium bar (was 5px)
   ctx.restore();
+}
+
+/** Draw a small gold diamond ornament centered at (cx, cy). */
+function diamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number, color: string) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - size);
+  ctx.lineTo(cx + size * 0.6, cy);
+  ctx.lineTo(cx, cy + size);
+  ctx.lineTo(cx - size * 0.6, cy);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/** Glowing progress bar — adds a 2px highlight at the fill leading edge. */
+function pgBarGlow(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number, pct: number,
+  bg: string, ca: string, cb: string,
+) {
+  ctx.fillStyle = bg;
+  rr(ctx, x, y, w, h, h / 2);
+  ctx.fill();
+  const fw = Math.max(pct > 0 ? h : 0, Math.min(w * pct / 100, w));
+  if (fw > 0) {
+    const g = ctx.createLinearGradient(x, 0, x + fw, 0);
+    g.addColorStop(0, ca); g.addColorStop(0.7, cb); g.addColorStop(1, cb);
+    ctx.fillStyle = g;
+    rr(ctx, x, y, fw, h, h / 2);
+    ctx.fill();
+    // Subtle glow tip
+    if (fw < w - 4) {
+      ctx.save();
+      ctx.shadowColor = cb; ctx.shadowBlur = 8;
+      ctx.fillStyle = 'rgba(255,220,120,0.55)';
+      ctx.beginPath();
+      ctx.arc(x + fw, y + h / 2, h / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
 }
 
 /** Draw Arabic/RTL text. y = baseline. */
@@ -139,22 +163,24 @@ export async function generateShareImage(
 
   // ── Palette ───────────────────────────────────────────────────────────────
   const C = {
-    bg:     D ? '#0D0D0A' : '#EDE6DB',
-    bgB:    D ? '#171713' : '#E3DACE',
-    card:   D ? '#252320' : '#FFFFFF',
-    cardBd: D ? 'rgba(255,255,255,0.13)' : 'rgba(0,0,0,0.08)',
-    cardSh: D ? 'rgba(0,0,0,0.65)'       : 'rgba(0,0,0,0.11)',
-    // Primary text: near-white / deep navy
-    pri:    D ? '#F0EFE8' : '#111827',
-    // Secondary text: readable on dark cards (was too dim at #9C9C94)
-    sec:    D ? '#B4B3AC' : '#5C5C58',
-    // Tertiary / muted labels (was too dim at #6A6A62)
-    ter:    D ? '#8E8D88' : '#9A9A98',
-    acc:    D ? '#D4A240' : '#C99368',
-    accDk:  '#A87248',
-    accFd:  D ? 'rgba(212,162,64,0.18)' : '#F5E3D0',
-    sep:    D ? 'rgba(255,255,255,0.13)' : '#DDD5C8',
-    pgBg:   D ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)',
+    bg:     D ? '#0C0C09' : '#EDE6DB',
+    bgB:    D ? '#181714' : '#E3DACE',
+    card:   D ? '#242220' : '#FFFFFF',
+    cardBd: D ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)',
+    cardSh: D ? 'rgba(0,0,0,0.70)'       : 'rgba(0,0,0,0.12)',
+    // Primary text
+    pri:    D ? '#F2F1EA' : '#111827',
+    // Secondary — warm and readable
+    sec:    D ? '#B8B7B0' : '#4A4A46',
+    // Tertiary / muted
+    ter:    D ? '#908F8A' : '#8A8A86',
+    // Gold accent — warm amber
+    acc:    D ? '#D6A642' : '#C99368',
+    accB:   D ? '#E8BE6A' : '#D4A870',  // lighter gold for highlights
+    accDk:  '#9C6A38',
+    accFd:  D ? 'rgba(214,166,66,0.16)' : '#F5E3D0',
+    sep:    D ? 'rgba(255,255,255,0.11)' : '#DDD5C8',
+    pgBg:   D ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.10)',
   };
 
   const SK_CLR: Record<string, string> = {
@@ -172,13 +198,20 @@ export async function generateShareImage(
 
   // ── Background ────────────────────────────────────────────────────────────
   const bgG = ctx.createLinearGradient(0, 0, 0, H);
-  bgG.addColorStop(0, C.bg); bgG.addColorStop(1, C.bgB);
+  bgG.addColorStop(0, C.bg); bgG.addColorStop(0.6, C.bg); bgG.addColorStop(1, C.bgB);
   ctx.fillStyle = bgG; ctx.fillRect(0, 0, W, H);
 
-  const radG = ctx.createRadialGradient(W / 2, 0, 60, W / 2, 0, 440);
-  radG.addColorStop(0, D ? 'rgba(212,162,64,0.09)' : 'rgba(201,147,104,0.14)');
-  radG.addColorStop(1, 'transparent');
-  ctx.fillStyle = radG; ctx.fillRect(0, 0, W, H);
+  // Top-center warm glow (header area)
+  const radTop = ctx.createRadialGradient(W / 2, 0, 40, W / 2, 0, 480);
+  radTop.addColorStop(0, D ? 'rgba(214,166,66,0.12)' : 'rgba(201,147,104,0.18)');
+  radTop.addColorStop(1, 'transparent');
+  ctx.fillStyle = radTop; ctx.fillRect(0, 0, W, H);
+
+  // Bottom-left warm depth glow (premium depth layer)
+  const radBL = ctx.createRadialGradient(0, H, 0, 0, H, 600);
+  radBL.addColorStop(0, D ? 'rgba(180,130,50,0.07)' : 'rgba(190,140,90,0.10)');
+  radBL.addColorStop(1, 'transparent');
+  ctx.fillStyle = radBL; ctx.fillRect(0, 0, W, H);
 
   // ── Layout constants ──────────────────────────────────────────────────────
   const OP = 56;   // outer canvas margin
@@ -197,24 +230,28 @@ export async function generateShareImage(
   // 1. HEADER
   // ══════════════════════════════════════════════
 
-  // Decorative ring + center dot
-  ctx.globalAlpha = 0.45;
-  ctx.strokeStyle = C.acc; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(W / 2, y + 14, 14, 0, Math.PI * 2); ctx.stroke();
+  // Premium header ornament: three small diamonds in a row
+  const dY = y + 14;
+  diamond(ctx, W / 2,      dY, 5.5, C.acc);
+  ctx.globalAlpha = 0.50;
+  diamond(ctx, W / 2 - 20, dY, 3.5, C.acc);
+  diamond(ctx, W / 2 + 20, dY, 3.5, C.acc);
   ctx.globalAlpha = 1;
-  ctx.fillStyle = C.acc;
-  ctx.beginPath(); ctx.arc(W / 2, y + 14, 5, 0, Math.PI * 2); ctx.fill();
-  y += 38; // clear ring
+  y += 38;
 
-  // App name — 52px bold (Cairo ascent ≈ 0.81 × sz ≈ 42)
-  t(ctx, 'احسبها صح', 52, 800, C.acc, 'center', W / 2, y + 42);
-  y += 60;
+  // App name — 54px bold, gold with subtle glow
+  ctx.save();
+  ctx.shadowColor = D ? 'rgba(214,166,66,0.35)' : 'rgba(180,120,60,0.20)';
+  ctx.shadowBlur  = 18;
+  t(ctx, 'احسبها صح', 54, 800, C.acc, 'center', W / 2, y + 44);
+  ctx.restore();
+  y += 62;
 
-  // Subtitle — 26px medium (ascent ≈ 21)
+  // Subtitle — 26px medium
   t(ctx, 'ملخص خطة الزواج', 26, 500, C.sec, 'center', W / 2, y + 21);
   y += 36;
 
-  // Plan title — 34px bold (ascent ≈ 27)
+  // Plan title — 34px bold
   t(ctx, `خطة زواج ${name}`, 34, 700, C.pri, 'center', W / 2, y + 27);
   y += 46;
 
@@ -226,7 +263,7 @@ export async function generateShareImage(
   const heroX = OP, heroY = y, heroW = W - OP * 2, heroH = 326;
 
   drawCard(ctx, heroX, heroY, heroW, heroH, 22, C.card, C.cardBd, C.cardSh);
-  goldBarTop(ctx, heroX, heroY, heroW, heroH, 22, C.accDk, C.acc, D ? 'rgba(212,162,64,0.22)' : '#F5E3D0');
+  goldBarTop(ctx, heroX, heroY, heroW, heroH, 22, C.accDk, C.acc, D ? 'rgba(214,166,66,0.28)' : '#F5E3D0');
 
   // hy = distance from heroY top to the current drawing row
   let hy = 38;
@@ -252,15 +289,22 @@ export async function generateShareImage(
   t(ctx, 'المتبقي من الميزانية', 19, 500, C.sec, 'right', heroX + heroW - CP, heroY + hy + 21);
   hy += 46; // clear pill row + gap
 
-  // ── Row B: big remaining value (68px) ────────────────────────────────────
-  // ascent ≈ 55px — ensure enough clearance from Row A
-  amt(ctx, formatCurrency(Math.max(0, stats.remaining)), 68, 800, C.pri,
-    'right', heroX + heroW - CP, heroY + hy + 55);
-  hy += 76; // 68 + descenders
+  // ── Row B: big remaining value (72px) — with text glow ──────────────────
+  ctx.save();
+  ctx.shadowColor = D ? 'rgba(214,166,66,0.22)' : 'rgba(180,120,60,0.15)';
+  ctx.shadowBlur  = 14;
+  amt(ctx, formatCurrency(Math.max(0, stats.remaining)), 72, 800, C.pri,
+    'right', heroX + heroW - CP, heroY + hy + 58);
+  ctx.restore();
+  hy += 80; // 72px + descenders
 
-  // ── Divider ───────────────────────────────────────────────────────────────
-  hy += 14;
-  sepLine(ctx, heroX + CP, heroX + heroW - CP, heroY + hy, C.sep);
+  // ── Divider with center diamond ──────────────────────────────────────────
+  hy += 12;
+  const divY = heroY + hy;
+  const divMid = heroX + heroW / 2;
+  sepLine(ctx, heroX + CP, divMid - 18, divY, C.sep);
+  diamond(ctx, divMid, divY, 4, C.acc);
+  sepLine(ctx, divMid + 18, heroX + heroW - CP, divY, C.sep);
   hy += 22;
 
   // ── Row C: 3-column stats ─────────────────────────────────────────────────
@@ -284,9 +328,9 @@ export async function generateShareImage(
   });
   hy += 58;
 
-  // ── Progress bar (14px tall) ──────────────────────────────────────────────
+  // ── Progress bar (14px, with glow tip) ───────────────────────────────────
   hy += 14;
-  pgBar(ctx, heroX + CP, heroY + hy, heroW - CP * 2, 14, pct, C.pgBg, C.accDk, C.acc);
+  pgBarGlow(ctx, heroX + CP, heroY + hy, heroW - CP * 2, 14, pct, C.pgBg, C.accDk, C.acc);
   // remaining space to heroH bottom ≈ 326 - (hy + 14) - 38 = safe padding
 
   y = heroY + heroH;
@@ -297,10 +341,9 @@ export async function generateShareImage(
 
   y += 30;
 
-  // Section label
-  ctx.fillStyle = C.acc;
-  ctx.beginPath(); ctx.arc(R - 5, y + 12, 4, 0, Math.PI * 2); ctx.fill();
-  t(ctx, 'نظرة سريعة', 22, 700, C.sec, 'right', R - 18, y + 18);
+  // Section label with diamond ornament
+  diamond(ctx, R - 6, y + 12, 4.5, C.acc);
+  t(ctx, 'نظرة سريعة', 22, 700, C.sec, 'right', R - 20, y + 18);
   y += 36;
 
   const MGAP = 14;
@@ -366,10 +409,9 @@ export async function generateShareImage(
 
   y += 26;
 
-  // Section label
-  ctx.fillStyle = C.acc;
-  ctx.beginPath(); ctx.arc(R - 5, y + 12, 4, 0, Math.PI * 2); ctx.fill();
-  t(ctx, 'أبرز البنود', 22, 700, C.sec, 'right', R - 18, y + 18);
+  // Section label with diamond ornament
+  diamond(ctx, R - 6, y + 12, 4.5, C.acc);
+  t(ctx, 'أبرز البنود', 22, 700, C.sec, 'right', R - 20, y + 18);
   y += 36;
 
   if (topCats.length === 0) {
@@ -409,7 +451,7 @@ export async function generateShareImage(
       t(ctx, `المصروف: ${formatCurrency(cat.paid)}`,  15, 500, C.ter, 'left',  iL, y + 67);
 
       // Progress bar — positioned well below all text (Row 2 bottom ≈ y+71, gap=11px)
-      pgBar(ctx, iL, y + 82, W - OP * 2 - iIP * 2, 8, catPct, C.pgBg, C.accDk, C.acc);
+      pgBarGlow(ctx, iL, y + 82, W - OP * 2 - iIP * 2, 8, catPct, C.pgBg, C.accDk, C.acc);
 
       y += IH + (ci < topCats.length - 1 ? IGAP : 0);
     }

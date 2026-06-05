@@ -42,7 +42,6 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
       const blob = await generateShareImage(settings.name, stats, topCats, paidItems, totalItems);
       const file = new File([blob], 'خطة-زواجي.png', { type: 'image/png' });
 
-      // 1. Image share (native share sheet with file)
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: `خطة زواج ${settings.name}` });
         setDone(true);
@@ -50,7 +49,6 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
         return;
       }
 
-      // 2. Download image as fallback
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -62,66 +60,110 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
       setDone(true);
       setTimeout(() => setDone(false), 2500);
     } catch {
-      // user cancelled — no-op
+      // user cancelled
     } finally {
       setGenerating(false);
     }
   }
 
-  const pct = Math.round(stats.spentPercentage);
+  const pct = Math.min(100, Math.round(stats.spentPercentage));
   const days = stats.daysRemaining;
   const canShareFiles = !!(typeof navigator !== 'undefined' && navigator.canShare);
+
+  const SK_LABEL: Record<string, string> = {
+    comfortable: 'مريح', balanced: 'متوازن', attention: 'يحتاج انتباه', exceeded: 'تجاوز الميزانية',
+  };
+  const SK_COLOR: Record<string, string> = {
+    comfortable: '#2FAE72', balanced: 'var(--accent)', attention: '#E67E22', exceeded: '#E74C3C',
+  };
+  const sk = stats.comfortLevel;
+  const skLabel = SK_LABEL[sk] ?? 'متوازن';
+  const skColor = SK_COLOR[sk] ?? 'var(--accent)';
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title="شارك خطتك">
 
-      {/* Preview card */}
-      <div style={previewCard}>
-        <div style={accentBar} />
-        <div style={cardInner}>
+      {/* ─── Preview mini-card ─────────────────────────────────── */}
+      <div style={previewWrap}>
 
-          <div style={cardHead}>
-            <p style={cardAppMark}>احسبها صح</p>
-            <h2 style={cardName}>خطة زواج {settings.name}</h2>
+        {/* Gold top bar */}
+        <div style={goldBar} />
+
+        <div style={previewBody}>
+
+          {/* App brand row */}
+          <div style={brandRow}>
+            <span style={brandName}>احسبها صح</span>
+            <span style={statusPill(skColor)}>{skLabel}</span>
           </div>
 
-          <div style={sep} />
+          {/* Plan title */}
+          <p style={planTitle}>خطة زواج {settings.name}</p>
 
-          <div style={statsList}>
+          {/* ─── Hero: remaining ─── */}
+          <div style={heroSection}>
+            <p style={heroLabel}>المتبقي من الميزانية</p>
+            <p style={heroValue}>{formatCurrency(Math.max(0, stats.remaining))}</p>
+          </div>
+
+          {/* ─── Progress bar ─── */}
+          <div style={pgTrack}>
+            <div style={pgFill(pct)} />
+          </div>
+          <div style={pgMeta}>
+            <span style={pgMetaText}>{pct}٪ مصروف</span>
+            <span style={pgMetaText}>{formatCurrency(stats.totalBudget)}</span>
+          </div>
+
+          {/* ─── Divider ─── */}
+          <div style={divider} />
+
+          {/* ─── Stats grid ─── */}
+          <div style={statsGrid}>
+            <MiniStat label="المصروف"    value={formatCurrency(stats.totalSpent)} accent />
             {days !== null && (
-              <StatRow
+              <MiniStat
                 label={days >= 0 ? 'باقي على الفرح' : 'مضى على الفرح'}
                 value={`${Math.abs(days)} يوم`}
-                accent
               />
             )}
-            <StatRow label="الميزانية الإجمالية" value={formatCurrency(stats.totalBudget)} />
-            <StatRow label="المنجز" value={`${formatCurrency(stats.totalSpent)} · ${pct}٪`} />
-            <StatRow label="المتبقي" value={formatCurrency(Math.max(0, stats.remaining))} />
+            {stats.emergencyReserve > 0 && (
+              <MiniStat label="احتياطي الطوارئ" value={formatCurrency(stats.emergencyReserve)} />
+            )}
+            {totalItems > 0 && (
+              <MiniStat label="الإنجاز" value={`${paidItems} / ${totalItems} بند`} />
+            )}
           </div>
 
+          {/* ─── Top categories ─── */}
           {topCats.length > 0 && (
             <>
-              <div style={sep} />
-              <div style={catsBlock}>
-                <p style={catsSectionLabel}>أبرز البنود</p>
-                {topCats.map(c => <CatRow key={c.name} name={c.name} total={c.total} />)}
+              <div style={divider} />
+              <p style={catsHeading}>أبرز البنود</p>
+              <div style={catsList}>
+                {topCats.map(c => <CatMini key={c.name} cat={c} />)}
               </div>
             </>
           )}
 
-          <div style={sep} />
-
-          <div style={watermark}>
-            <span style={watermarkApp}>✨ احسبها صح</span>
-            <span style={watermarkUrl}>ehsebha-sah.pages.dev</span>
+          {/* ─── Watermark ─── */}
+          <div style={wm}>
+            <span style={wmApp}>احسبها صح</span>
+            <span style={wmUrl}>ehsebha-sah.pages.dev</span>
           </div>
+
         </div>
       </div>
 
-      {/* Action */}
+      {/* ─── Action ─────────────────────────────────────────────── */}
       <div style={actionsWrap}>
-        <Button variant="primary" size="lg" fullWidth loading={generating} onClick={handleShare}>
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={generating}
+          onClick={handleShare}
+        >
           {done ? '✓ تم' : generating ? '' : canShareFiles ? 'شارك الخطة كصورة' : 'حفظ الصورة'}
         </Button>
         <p style={hintText}>
@@ -132,135 +174,253 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
               : 'تُحفظ الصورة على جهازك مباشرة.'}
         </p>
       </div>
+
     </BottomSheet>
   );
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 
-function StatRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function MiniStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div style={statRow}>
-      <span style={statLabel}>{label}</span>
-      <span style={{ ...statValue, color: accent ? 'var(--accent)' : 'var(--text-primary)' }}>
-        {value}
-      </span>
+    <div style={miniStatWrap}>
+      <span style={miniStatVal(!!accent)}>{value}</span>
+      <span style={miniStatLbl}>{label}</span>
     </div>
   );
 }
 
-function CatRow({ name, total }: { name: string; total: number }) {
+function CatMini({ cat }: { cat: ShareTopCat }) {
+  const pct = cat.total > 0 ? Math.min(100, (cat.paid / cat.total) * 100) : 0;
   return (
-    <div style={catRow}>
-      <div style={catDot} />
-      <span style={catName}>{name}</span>
-      <span style={catAmt}>{formatCurrency(total)}</span>
+    <div style={catMiniWrap}>
+      <div style={catMiniHead}>
+        <span style={catMiniName}>{cat.name}</span>
+        <span style={catMiniAmt}>{formatCurrency(cat.total)}</span>
+      </div>
+      <div style={catMiniTrack}>
+        <div style={catMiniFill(pct)} />
+      </div>
     </div>
   );
 }
 
 // ─── Styles ────────────────────────────────────────────────────────────────
 
-const previewCard: React.CSSProperties = {
+const previewWrap: React.CSSProperties = {
   borderRadius: 'var(--radius-xl)',
   border: '1px solid var(--border)',
   overflow: 'hidden',
-  background: 'var(--bg-primary)',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
+  background: 'var(--bg-card)',
+  boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
   marginBottom: 'var(--space-5)',
 };
-const accentBar: React.CSSProperties = {
-  height: '3px',
-  background: 'linear-gradient(90deg, var(--accent-dark), var(--accent), var(--accent-light))',
+
+const goldBar: React.CSSProperties = {
+  height: '4px',
+  background: 'linear-gradient(90deg, var(--accent-dark, #9C6A38), var(--accent), var(--accent-light, #E8BE6A))',
 };
-const cardInner: React.CSSProperties = {
-  padding: 'var(--space-5)',
+
+const previewBody: React.CSSProperties = {
+  padding: '16px 18px',
   display: 'flex',
   flexDirection: 'column',
+  gap: 0,
 };
-const cardHead: React.CSSProperties = { paddingBottom: 'var(--space-4)' };
-const cardAppMark: React.CSSProperties = {
-  margin: '0 0 4px',
-  fontSize: '10px',
+
+const brandRow: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '6px',
+};
+
+const brandName: React.CSSProperties = {
+  fontSize: '11px',
   fontWeight: 700,
   color: 'var(--accent)',
-  letterSpacing: '1px',
-  textTransform: 'uppercase' as const,
+  letterSpacing: '0.5px',
 };
-const cardName: React.CSSProperties = {
-  margin: 0,
-  fontSize: '20px',
+
+const statusPill = (color: string): React.CSSProperties => ({
+  fontSize: '11px',
+  fontWeight: 600,
+  color,
+  background: `${color}18`,
+  border: `1px solid ${color}40`,
+  borderRadius: '20px',
+  padding: '2px 10px',
+});
+
+const planTitle: React.CSSProperties = {
+  margin: '0 0 14px',
+  fontSize: '17px',
   fontWeight: 800,
   color: 'var(--text-primary)',
-  lineHeight: 1.2,
+  lineHeight: 1.3,
 };
-const sep: React.CSSProperties = {
-  height: '0.5px',
-  background: 'var(--border-light)',
-  marginBottom: 'var(--space-4)',
+
+const heroSection: React.CSSProperties = {
+  marginBottom: '8px',
 };
-const statsList: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--space-2)',
-  paddingBottom: 'var(--space-4)',
-};
-const statRow: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-};
-const statLabel: React.CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--text-secondary)',
+
+const heroLabel: React.CSSProperties = {
+  margin: '0 0 2px',
+  fontSize: '11px',
   fontWeight: 500,
+  color: 'var(--text-secondary)',
 };
-const statValue: React.CSSProperties = {
-  fontSize: '13px',
-  fontWeight: 700,
+
+const heroValue: React.CSSProperties = {
+  margin: 0,
+  fontSize: '28px',
+  fontWeight: 800,
+  color: 'var(--text-primary)',
+  lineHeight: 1.1,
+  letterSpacing: '-0.5px',
 };
-const catsBlock: React.CSSProperties = {
-  paddingBottom: 'var(--space-4)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--space-2)',
-};
-const catsSectionLabel: React.CSSProperties = {
-  margin: '0 0 var(--space-2)',
-  fontSize: '10px',
-  fontWeight: 700,
-  color: 'var(--text-tertiary)',
-  letterSpacing: '0.8px',
-  textTransform: 'uppercase' as const,
-};
-const catRow: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--space-2)',
-};
-const catDot: React.CSSProperties = {
-  width: '5px',
+
+const pgTrack: React.CSSProperties = {
   height: '5px',
-  borderRadius: '50%',
-  background: 'var(--accent)',
-  flexShrink: 0,
+  borderRadius: '10px',
+  background: 'var(--border-light)',
+  overflow: 'hidden',
+  marginBottom: '4px',
 };
-const catName: React.CSSProperties = { flex: 1, fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 };
-const catAmt: React.CSSProperties = { fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' };
-const watermark: React.CSSProperties = {
+
+const pgFill = (pct: number): React.CSSProperties => ({
+  height: '100%',
+  width: `${pct}%`,
+  borderRadius: '10px',
+  background: 'linear-gradient(90deg, var(--accent-dark, #9C6A38), var(--accent))',
+  transition: 'width 0.4s ease',
+});
+
+const pgMeta: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingTop: 'var(--space-1)',
+  marginBottom: '14px',
 };
-const watermarkApp: React.CSSProperties = { fontSize: '11px', fontWeight: 700, color: 'var(--accent)' };
-const watermarkUrl: React.CSSProperties = {
+
+const pgMetaText: React.CSSProperties = {
   fontSize: '11px',
   color: 'var(--text-tertiary)',
   fontWeight: 500,
+};
+
+const divider: React.CSSProperties = {
+  height: '0.5px',
+  background: 'var(--border-light)',
+  marginBottom: '12px',
+};
+
+const statsGrid: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '10px',
+  marginBottom: '14px',
+};
+
+const miniStatWrap: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+};
+
+const miniStatVal = (accent: boolean): React.CSSProperties => ({
+  fontSize: '15px',
+  fontWeight: 700,
+  color: accent ? 'var(--accent)' : 'var(--text-primary)',
+  lineHeight: 1.2,
+});
+
+const miniStatLbl: React.CSSProperties = {
+  fontSize: '11px',
+  color: 'var(--text-tertiary)',
+  fontWeight: 400,
+};
+
+const catsHeading: React.CSSProperties = {
+  margin: '0 0 8px',
+  fontSize: '11px',
+  fontWeight: 700,
+  color: 'var(--text-tertiary)',
+  letterSpacing: '0.5px',
+};
+
+const catsList: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  marginBottom: '14px',
+};
+
+const catMiniWrap: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+};
+
+const catMiniHead: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'baseline',
+};
+
+const catMiniName: React.CSSProperties = {
+  fontSize: '12px',
+  fontWeight: 600,
+  color: 'var(--text-primary)',
+};
+
+const catMiniAmt: React.CSSProperties = {
+  fontSize: '12px',
+  fontWeight: 600,
+  color: 'var(--text-secondary)',
+};
+
+const catMiniTrack: React.CSSProperties = {
+  height: '3px',
+  borderRadius: '6px',
+  background: 'var(--border-light)',
+  overflow: 'hidden',
+};
+
+const catMiniFill = (pct: number): React.CSSProperties => ({
+  height: '100%',
+  width: `${pct}%`,
+  borderRadius: '6px',
+  background: 'linear-gradient(90deg, var(--accent-dark, #9C6A38), var(--accent))',
+});
+
+const wm: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingTop: '4px',
+  borderTop: '0.5px solid var(--border-light)',
+  marginTop: '4px',
+};
+
+const wmApp: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  color: 'var(--accent)',
+};
+
+const wmUrl: React.CSSProperties = {
+  fontSize: '10px',
+  color: 'var(--text-tertiary)',
+  fontWeight: 400,
   direction: 'ltr',
 };
-const actionsWrap: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' };
+
+const actionsWrap: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-2)',
+};
+
 const hintText: React.CSSProperties = {
   margin: 0,
   fontSize: '12px',

@@ -24,8 +24,8 @@ const sizeMap: Record<ButtonSize, { height: string; fontSize: string; padding: s
 
 const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    backgroundColor: 'var(--accent)',
-    color: 'var(--text-inverse)',
+    background: 'linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%)',
+    color: '#FFF',
     border: 'none',
   },
   secondary: {
@@ -39,8 +39,8 @@ const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
     border: 'none',
   },
   danger: {
-    backgroundColor: 'var(--danger)',
-    color: 'var(--text-inverse)',
+    background: 'linear-gradient(135deg, #C0392B 0%, var(--danger) 100%)',
+    color: '#FFF',
     border: 'none',
   },
 };
@@ -93,7 +93,7 @@ export function Button({
     opacity: isDisabled ? 0.55 : 1,
     transition: 'all var(--transition-fast)',
     transform: pressed && !isDisabled ? 'scale(0.98)' : 'scale(1)',
-    boxShadow: pressed && !isDisabled ? 'none' : (variant === 'primary' ? 'var(--shadow-sm)' : 'none'),
+    boxShadow: pressed && !isDisabled ? 'none' : (variant === 'primary' ? '0 3px 12px rgba(168,114,72,0.35)' : 'none'),
     userSelect: 'none',
     WebkitTapHighlightColor: 'transparent',
     outline: 'none',

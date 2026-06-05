@@ -43,8 +43,8 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
       </div>
 
       {/* Amount + status pill */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
+        <div>
           <span
             className="num"
             style={{
@@ -54,34 +54,45 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
           >
             {hideAmounts ? '••••' : formatCurrency(Math.abs(stats.remaining))}
           </span>
-          <span style={amountLabelStyle}>
-            {isOverBudget ? 'تجاوز الميزانية' : 'المتبقي'}
-          </span>
+          <p style={amountLabelStyle}>
+            {isOverBudget ? 'تجاوز الميزانية' : 'المتبقي من الميزانية'}
+          </p>
         </div>
-        <span style={{ ...pillStyle, color: status.color, background: status.bg }}>
+        <span style={{
+          ...pillStyle,
+          color: status.color,
+          background: status.bg,
+          borderColor: status.color + '33',
+          marginTop: '4px',
+        }}>
           {status.label}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={progressTrackStyle}>
           <div
             style={{
               width: `${pct}%`,
               height: '100%',
-              background: progressColor,
+              background: `linear-gradient(90deg, ${progressColor}CC, ${progressColor})`,
               borderRadius: 'inherit',
-              transition: 'width 1s ease',
+              transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
             }}
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={progressLabelStyle}>
-            صُرف <span className="num">{Math.round(stats.spentPercentage)}%</span>
+            صُرف <span className="num" style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
+              {Math.round(stats.spentPercentage)}%
+            </span>
           </span>
-          <span className="num" style={progressLabelStyle}>
-            {hideAmounts ? '••••' : formatCurrency(stats.availableBudget)}
+          <span style={progressLabelStyle}>
+            الإجمالي{' '}
+            <span className="num" style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>
+              {hideAmounts ? '••••' : formatCurrency(stats.totalBudget)}
+            </span>
           </span>
         </div>
       </div>
@@ -91,21 +102,23 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-card)',
-  borderRadius: 'var(--radius-xl)',
-  padding: 'var(--space-5)',
-  boxShadow: 'var(--shadow-sm)',
-  border: '1px solid var(--border-light)',
+  borderRadius: 'var(--radius-2xl)',
+  padding: 'var(--space-6)',
+  boxShadow: 'var(--shadow-md)',
+  border: '1px solid var(--border)',
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-4)',
+  gap: 'var(--space-5)',
   width: '100%',
+  position: 'relative',
+  overflow: 'hidden',
 };
 
 const cardLabelStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-xs)',
+  fontSize: 'var(--font-size-sm)',
   color: 'var(--text-tertiary)',
-  fontWeight: 600,
-  letterSpacing: '0.02em',
+  fontWeight: 500,
+  letterSpacing: '0.01em',
 };
 
 const eyeBtnStyle: React.CSSProperties = {
@@ -122,11 +135,12 @@ const eyeBtnStyle: React.CSSProperties = {
 };
 
 const mainAmountStyle: React.CSSProperties = {
-  fontSize: '32px',
+  fontSize: 'var(--font-size-4xl)',
   fontWeight: 800,
   lineHeight: 1,
   direction: 'ltr',
   display: 'block',
+  letterSpacing: '-0.02em',
 };
 
 const amountLabelStyle: React.CSSProperties = {
@@ -136,17 +150,25 @@ const amountLabelStyle: React.CSSProperties = {
 };
 
 const pillStyle: React.CSSProperties = {
-  fontSize: '11px',
+  fontSize: '12px',
   fontWeight: 700,
   borderRadius: 'var(--radius-full)',
-  padding: '4px 10px',
+  padding: '5px 12px',
   flexShrink: 0,
   whiteSpace: 'nowrap',
+  border: '1px solid transparent',
+};
+
+const amountSubLabelStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-xs)',
+  color: 'var(--text-tertiary)',
+  fontWeight: 500,
+  marginTop: '4px',
 };
 
 const progressTrackStyle: React.CSSProperties = {
   width: '100%',
-  height: '6px',
+  height: '8px',
   background: 'var(--border)',
   borderRadius: 'var(--radius-full)',
   overflow: 'hidden',

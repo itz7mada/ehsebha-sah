@@ -61,9 +61,9 @@ const navStyle: React.CSSProperties = {
 };
 
 const backBtnStyle: React.CSSProperties = {
-  width: '36px',
-  height: '36px',
-  borderRadius: '50%',
+  width: '44px',
+  height: '44px',
+  borderRadius: 'var(--radius-lg)',
   background: 'var(--bg-card)',
   border: '1px solid var(--border)',
   cursor: 'pointer',
@@ -73,10 +73,11 @@ const backBtnStyle: React.CSSProperties = {
   flexShrink: 0,
   WebkitTapHighlightColor: 'transparent',
   outline: 'none',
+  transition: 'background var(--transition-fast)',
 };
 
 const spacerStyle: React.CSSProperties = {
-  width: '36px',
+  width: '44px',
   flexShrink: 0,
 };
 
@@ -88,21 +89,21 @@ const segRowStyle: React.CSSProperties = {
 
 const segBase: React.CSSProperties = {
   flex: 1,
-  height: '3px',
+  height: '4px',
   borderRadius: '99px',
-  transition: 'background 300ms ease',
+  transition: 'background 350ms ease',
 };
 
 const segActiveStyle: React.CSSProperties = { ...segBase, background: 'var(--accent)' };
 const segInactiveStyle: React.CSSProperties = { ...segBase, background: 'var(--border)' };
 
 const countStyle: React.CSSProperties = {
-  fontSize: '11px',
+  fontSize: '12px',
   fontWeight: 700,
   color: 'var(--text-tertiary)',
   flexShrink: 0,
   fontFamily: 'var(--font-family)',
-  letterSpacing: '0.5px',
+  letterSpacing: '0.3px',
   direction: 'ltr',
 };
 

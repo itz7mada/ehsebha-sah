@@ -41,7 +41,7 @@ export function Input({
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 'var(--font-size-sm)',
+    fontSize: 'var(--font-size-base)',
     fontWeight: 600,
     color: error ? 'var(--danger)' : focused ? 'var(--accent)' : 'var(--text-secondary)',
     transition: 'color var(--transition-fast)',
@@ -77,12 +77,13 @@ export function Input({
     border: 'none',
     outline: 'none',
     background: 'transparent',
-    fontSize: 'var(--font-size-base)',
+    fontSize: '16px',
+    fontWeight: 500,
     color: disabled ? 'var(--text-tertiary)' : 'var(--text-primary)',
     fontFamily: 'var(--font-family)',
     direction: type === 'number' || type === 'tel' ? 'ltr' : 'rtl',
-    textAlign: type === 'number' || type === 'tel' ? 'start' : 'start',
-    padding: `var(--space-3) var(--space-4)`,
+    textAlign: 'start',
+    padding: `14px var(--space-4)`,
     lineHeight: '1.5',
     width: '100%',
     resize: 'none',
