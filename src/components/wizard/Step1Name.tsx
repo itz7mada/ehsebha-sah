@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import Button from '../common/Button';
 import { validateName } from '../../utils/validation';
+import { getNameStepCopy } from '../../types';
+import type { UserRole } from '../../types';
 
 interface Step1NameProps {
   value: string;
+  role?: UserRole;
   onChange: (v: string) => void;
   onNext: () => void;
 }
 
-export default function Step1Name({ value, onChange, onNext }: Step1NameProps) {
+export default function Step1Name({ value, role, onChange, onNext }: Step1NameProps) {
   const [touched, setTouched] = useState(false);
   const [focused, setFocused] = useState(false);
+  const copy = getNameStepCopy(role);
 
   const error = touched ? validateName(value) ?? undefined : undefined;
   const canProceed = validateName(value) === null;
@@ -30,12 +34,12 @@ export default function Step1Name({ value, onChange, onNext }: Step1NameProps) {
 
         <div style={headingBlock}>
           <p style={stepLabel}>نبدأ بالحسبة</p>
-          <h1 style={title}>شو اسمك؟</h1>
-          <p style={subtitle}>خلنا نعرفك عشان نرتب لك التجربة باسمك.</p>
+          <h1 style={title}>{copy.title}</h1>
+          <p style={subtitle}>{copy.subtitle}</p>
         </div>
 
         <div style={card}>
-          <label style={fieldLabel} htmlFor="w-name">اسمك</label>
+          <label style={fieldLabel} htmlFor="w-name">{copy.fieldLabel}</label>
           <div
             style={{
               marginTop: '6px',
@@ -54,7 +58,7 @@ export default function Step1Name({ value, onChange, onNext }: Step1NameProps) {
               onChange={(e) => onChange(e.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              placeholder="اكتب اسمك"
+              placeholder={copy.placeholder}
               autoFocus
               style={inputEl}
             />

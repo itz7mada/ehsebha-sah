@@ -10,6 +10,7 @@ import { Input } from '../components/common/Input';
 import { PlusIcon, ShareIcon } from '../components/common/Icons';
 import { getDaysLabel, maskAmount, parseCurrencyInput, formatCurrency, now, generateId, normalizeDigits } from '../utils/formatting';
 import * as db from '../db/database';
+import { roleTagline } from '../types';
 import type { Category } from '../types';
 
 const CAT_COLORS = [
@@ -172,7 +173,11 @@ export default function Dashboard() {
         <header style={headerStyle}>
           <div style={{ flex: 1 }}>
             <h1 style={titleStyle}>خلنا نحسبها صح</h1>
-            <p style={subtitleStyle}>نظرة سريعة على وضعك قبل يوم الزواج</p>
+            <p style={subtitleStyle}>
+              {settings?.userRole && settings.userRole !== 'general'
+                ? roleTagline(settings.userRole)
+                : 'نظرة سريعة على وضعك قبل يوم الزواج'}
+            </p>
           </div>
           <button
             type="button"

@@ -4,6 +4,7 @@ export type Responsibility = 'groom' | 'bride' | 'grooms_family' | 'brides_famil
 export type SupportStatus = 'expected' | 'received';
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type HousingSituation = 'family' | 'rent' | 'villa' | 'undecided';
+export type UserRole = 'groom' | 'bride' | 'couple' | 'general';
 export type TransactionType = 'paid' | 'partial' | 'scheduled';
 export type JourneyEventType =
   | 'setup_complete'
@@ -35,6 +36,7 @@ export interface Settings {
   setupComplete: boolean;
   housingSituation?: HousingSituation;
   notificationPrefs?: NotificationPrefs;
+  userRole?: UserRole;
   createdAt: string;
   updatedAt: string;
 }
@@ -139,6 +141,78 @@ export const DEFAULT_CATEGORIES: Omit<Category, 'id'>[] = [
   { name: 'شهر العسل', emoji: '🌙', isActive: false, order: 5, isSystem: true, color: '#2FAE72' },
   { name: 'أخرى', emoji: '📋', isActive: false, order: 6, isSystem: true, color: '#8A8F98' },
 ];
+
+// ─── User role personalization ──────────────────────────────────────────────
+// Light personalization only — never deletes or alters existing user data.
+
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  groom: 'المعرس',
+  bride: 'العروس',
+  couple: 'نخطط مع بعض',
+  general: 'عام',
+};
+
+// Short tagline used in dashboard / onboarding greetings.
+const ROLE_TAGLINE: Record<UserRole, string> = {
+  groom: 'خلنا نرتب حسبة الزواج خطوة بخطوة',
+  bride: 'خلنا نرتب تجهيزات الزواج بوضوح',
+  couple: 'خلونا نرتب خطتكم خطوة بخطوة',
+  general: 'خلنا نرتب الخطة خطوة بخطوة',
+};
+
+export function roleTagline(role?: UserRole): string {
+  return ROLE_TAGLINE[role ?? 'general'] ?? ROLE_TAGLINE.general;
+}
+
+export interface NameStepCopy {
+  title: string;
+  subtitle: string;
+  fieldLabel: string;
+  placeholder: string;
+}
+
+export function getNameStepCopy(role?: UserRole): NameStepCopy {
+  switch (role) {
+    case 'groom':
+      return { title: 'شو اسمك؟', subtitle: 'خلنا نرتب لك حسبة الزواج باسمك.', fieldLabel: 'اسمك', placeholder: 'اكتب اسمك' };
+    case 'bride':
+      return { title: 'شو اسمج؟', subtitle: 'خلنا نرتب لج تجهيزات الزواج باسمج.', fieldLabel: 'اسمج', placeholder: 'اكتبي اسمج' };
+    case 'couple':
+      return { title: 'شو نكتب اسم الخطة؟', subtitle: 'مثلاً: خطة زواج أحمد ومريم', fieldLabel: 'اسم الخطة', placeholder: 'مثلاً: زواج أحمد ومريم' };
+    default:
+      return { title: 'شو اسمك؟', subtitle: 'خلنا نرتب لك التجربة.', fieldLabel: 'اسمك', placeholder: 'اكتب اسمك' };
+  }
+}
+
+// Visual metadata for every category name we may suggest, keyed by name so
+// role variants stay consistent with the base DEFAULT_CATEGORIES styling.
+const CATEGORY_META: Record<string, { emoji: string; color: string }> = {
+  'المهر': { emoji: '💍', color: '#C99368' },
+  'الزهبة': { emoji: '✨', color: '#C9A227' },
+  'الملجة': { emoji: '👗', color: '#ED6A5A' },
+  'العرس': { emoji: '🎊', color: '#9B5DE5' },
+  'التجهيزات': { emoji: '🎁', color: '#E08A5B' },
+  'السكن': { emoji: '🏠', color: '#00BBF9' },
+  'شهر العسل': { emoji: '🌙', color: '#2FAE72' },
+  'أخرى': { emoji: '📋', color: '#8A8F98' },
+};
+
+// Suggested (default) categories per role for NEW users during onboarding.
+// 'general' mirrors the base DEFAULT_CATEGORIES list.
+const ROLE_CATEGORY_NAMES: Record<UserRole, string[]> = {
+  groom: ['المهر', 'الملجة', 'العرس', 'السكن', 'شهر العسل'],
+  bride: ['الزهبة', 'الملجة', 'العرس', 'التجهيزات', 'السكن', 'شهر العسل'],
+  couple: ['المهر', 'الملجة', 'العرس', 'السكن', 'شهر العسل', 'التجهيزات'],
+  general: DEFAULT_CATEGORIES.map((c) => c.name),
+};
+
+export function getDefaultCategoriesByRole(role?: UserRole): Omit<Category, 'id'>[] {
+  const names = ROLE_CATEGORY_NAMES[role ?? 'general'] ?? ROLE_CATEGORY_NAMES.general;
+  return names.map((name, i) => {
+    const meta = CATEGORY_META[name] ?? { emoji: '📋', color: '#8A8F98' };
+    return { name, emoji: meta.emoji, isActive: false, order: i + 1, isSystem: true, color: meta.color };
+  });
+}
 
 export const RELATION_OPTIONS = [
   'الأب', 'الأم', 'الأخ', 'الأخت', 'الجد', 'الجدة',

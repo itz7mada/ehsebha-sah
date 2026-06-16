@@ -1,8 +1,11 @@
 import React from 'react';
 import Button from '../common/Button';
+import { roleTagline } from '../../types';
+import type { UserRole } from '../../types';
 
 interface Step2WelcomeProps {
   name: string;
+  role?: UserRole;
   onNext: () => void;
 }
 
@@ -12,7 +15,10 @@ const rows = [
   { label: 'بدون تسجيل أو اشتراك', sub: 'مجاني من أول يوم.' },
 ];
 
-export default function Step2Welcome({ name, onNext }: Step2WelcomeProps) {
+export default function Step2Welcome({ name, role, onNext }: Step2WelcomeProps) {
+  const subtitleText = role && role !== 'general'
+    ? `${roleTagline(role)}، بدون تعقيد وبدون صداع.`
+    : 'بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.';
   return (
     <div style={screen}>
       <div style={scroll}>
@@ -21,7 +27,7 @@ export default function Step2Welcome({ name, onNext }: Step2WelcomeProps) {
           الله حيّه يا{' '}
           <span style={{ color: 'var(--accent)' }}>{name}</span>
         </h1>
-        <p style={subtitle}>بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.</p>
+        <p style={subtitle}>{subtitleText}</p>
 
         <div style={card}>
           {rows.map((row, i) => (

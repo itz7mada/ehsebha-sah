@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import * as db from '../db/database';
 import { generateId, now } from '../utils/formatting';
-import { DEFAULT_CATEGORIES } from '../types';
-import type { Settings, Category, SupportItem, JourneyEvent, HousingSituation } from '../types';
+import { getDefaultCategoriesByRole } from '../types';
+import type { Settings, Category, SupportItem, JourneyEvent, HousingSituation, UserRole } from '../types';
 
 import { OnboardingShell } from '../components/wizard/OnboardingShell';
+import StepRole from '../components/wizard/StepRole';
 import Step1Name from '../components/wizard/Step1Name';
 import Step2Welcome from '../components/wizard/Step2Welcome';
 import Step3Date from '../components/wizard/Step3Date';
@@ -16,10 +17,11 @@ import Step6Support, { type SupportEntry } from '../components/wizard/Step5Suppo
 import Step7Housing from '../components/wizard/Step6Housing';
 import Step8Categories from '../components/wizard/Step6Categories';
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 interface WizardData {
   name: string;
+  userRole: UserRole | '';
   weddingDate: string;
   budget: number;
   emergencyReserve: number;
@@ -32,6 +34,7 @@ interface WizardData {
 
 const initialData: WizardData = {
   name: '',
+  userRole: '',
   weddingDate: '',
   budget: 0,
   emergencyReserve: 0,
@@ -86,6 +89,7 @@ export default function SetupWizard() {
 
     try {
       const timestamp = now();
+      const role: UserRole = data.userRole || 'general';
       const settings: Settings = {
         id: 'settings',
         name: data.name.trim(),
@@ -96,11 +100,12 @@ export default function SetupWizard() {
         theme: 'system',
         setupComplete: true,
         housingSituation: data.housingSituation,
+        userRole: role,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
 
-      const categoriesToSave: Category[] = DEFAULT_CATEGORIES.map((cat) => ({
+      const categoriesToSave: Category[] = getDefaultCategoriesByRole(role).map((cat) => ({
         ...cat,
         id: generateId(),
         isActive: data.selectedCategories.includes(cat.name),
@@ -144,18 +149,30 @@ export default function SetupWizard() {
   return (
     <OnboardingShell step={step} totalSteps={TOTAL_STEPS} onBack={handleBack} animating={animating}>
       {step === 1 && (
-        <Step1Name value={data.name} onChange={(v) => patch('name', v)} onNext={handleNext} />
+        <StepRole
+          value={data.userRole}
+          onChange={(v) => {
+            // Changing role swaps the suggested category set — drop stale picks
+            // so the count/checkmarks and the saved set always match the new list.
+            if (v !== data.userRole) patch('selectedCategories', []);
+            patch('userRole', v);
+          }}
+          onNext={handleNext}
+        />
       )}
       {step === 2 && (
-        <Step2Welcome name={data.name} onNext={handleNext} />
+        <Step1Name role={data.userRole || undefined} value={data.name} onChange={(v) => patch('name', v)} onNext={handleNext} />
       )}
       {step === 3 && (
-        <Step3Date value={data.weddingDate} onChange={(v) => patch('weddingDate', v)} onNext={handleNext} />
+        <Step2Welcome name={data.name} role={data.userRole || undefined} onNext={handleNext} />
       )}
       {step === 4 && (
-        <Step4Budget value={data.budget} onChange={(v) => patch('budget', v)} onNext={handleNext} />
+        <Step3Date value={data.weddingDate} onChange={(v) => patch('weddingDate', v)} onNext={handleNext} />
       )}
       {step === 5 && (
+        <Step4Budget value={data.budget} onChange={(v) => patch('budget', v)} onNext={handleNext} />
+      )}
+      {step === 6 && (
         <Step5Emergency
           budget={data.budget}
           value={data.emergencyReserve}
@@ -167,7 +184,7 @@ export default function SetupWizard() {
           onNext={handleNext}
         />
       )}
-      {step === 6 && (
+      {step === 7 && (
         <Step6Support
           choice={data.supportChoice}
           onChoiceChange={(c) => patch('supportChoice', c)}
@@ -176,15 +193,16 @@ export default function SetupWizard() {
           onNext={handleNext}
         />
       )}
-      {step === 7 && (
+      {step === 8 && (
         <Step7Housing
           value={data.housingSituation}
           onChange={(v) => patch('housingSituation', v)}
           onNext={handleNext}
         />
       )}
-      {step === 8 && (
+      {step === 9 && (
         <Step8Categories
+          categories={getDefaultCategoriesByRole(data.userRole || 'general')}
           selected={data.selectedCategories}
           onToggle={toggleCategory}
           onComplete={handleComplete}

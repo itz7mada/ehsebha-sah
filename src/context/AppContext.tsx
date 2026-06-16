@@ -117,10 +117,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         db.getAllSupport(),
         db.getAllJourney(),
       ]);
+      // Backward-compat: old saved settings lack userRole — default to 'general'.
+      const normalizedSettings = settings
+        ? { ...settings, userRole: settings.userRole ?? 'general' }
+        : null;
       dispatch({
         type: 'INIT',
         payload: {
-          settings: settings ?? null,
+          settings: normalizedSettings,
           categories,
           expenses,
           support,

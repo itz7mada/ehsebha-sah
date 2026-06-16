@@ -10,7 +10,8 @@ import {
   getNotificationPermission,
   defaultNotificationPrefs,
 } from '../utils/notifications';
-import type { NotificationPrefs, HousingSituation, ThemeMode } from '../types';
+import { USER_ROLE_LABELS } from '../types';
+import type { NotificationPrefs, HousingSituation, ThemeMode, UserRole } from '../types';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { BottomSheet } from '../components/common/BottomSheet';
@@ -18,10 +19,10 @@ import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import {
   DownloadIcon, UploadIcon, TrashIcon,
   CalendarIcon, WalletIcon, AlertIcon, HomeIcon, SunIcon, MoonIcon,
-  ChevronRightIcon, CheckIcon,
+  ChevronRightIcon, CheckIcon, UserIcon,
 } from '../components/common/Icons';
 
-type ModalType = 'date' | 'budget' | 'housing' | null;
+type ModalType = 'date' | 'budget' | 'housing' | 'userRole' | null;
 
 const HOUSING_LABELS: Record<HousingSituation, string> = {
   family: 'بيت الأهل',
@@ -30,6 +31,8 @@ const HOUSING_LABELS: Record<HousingSituation, string> = {
   undecided: 'بعدني ما قررت',
 };
 const HOUSING_OPTIONS: HousingSituation[] = ['family', 'rent', 'villa', 'undecided'];
+
+const USER_ROLE_OPTIONS: UserRole[] = ['groom', 'bride', 'couple', 'general'];
 
 
 export default function Settings() {
@@ -41,6 +44,7 @@ export default function Settings() {
   const [fieldValue, setFieldValue] = useState('');
   const [fieldError, setFieldError] = useState('');
   const [pendingHousing, setPendingHousing] = useState<HousingSituation | undefined>();
+  const [pendingUserRole, setPendingUserRole] = useState<UserRole | undefined>();
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<{ text: string; ok: boolean } | null>(null);
@@ -62,6 +66,7 @@ export default function Settings() {
     if (type === 'date') setFieldValue(settings.weddingDate || '');
     else if (type === 'budget') setFieldValue(String(settings.budget));
     else if (type === 'housing') setPendingHousing(settings.housingSituation ?? 'family');
+    else if (type === 'userRole') setPendingUserRole(settings.userRole ?? 'general');
     setModal(type);
   }
 
@@ -78,9 +83,24 @@ export default function Settings() {
     }
   }
 
+  async function saveUserRole() {
+    if (!settings || pendingUserRole === undefined) return;
+    setSaving(true);
+    try {
+      // Only updates personalization — never touches existing categories/data.
+      const updated = { ...settings, userRole: pendingUserRole, updatedAt: now() };
+      await db.saveSettings(updated);
+      dispatch({ type: 'UPDATE_SETTINGS', payload: updated });
+      setModal(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function saveField() {
     if (!settings) return;
     if (modal === 'housing') { await saveHousing(); return; }
+    if (modal === 'userRole') { await saveUserRole(); return; }
     setSaving(true);
     setFieldError('');
     try {
@@ -384,6 +404,13 @@ export default function Settings() {
               value={settings.housingSituation ? HOUSING_LABELS[settings.housingSituation] : 'غير محدد'}
               onClick={() => openModal('housing')}
             />
+            <div className="divider" style={{ margin: 0 }} />
+            <SettingsRow
+              icon={<UserIcon size={18} color="var(--accent)" />}
+              label="طريقة استخدام التطبيق"
+              value={USER_ROLE_LABELS[settings.userRole ?? 'general'] ?? 'عام'}
+              onClick={() => openModal('userRole')}
+            />
           </div>
         </div>
 
@@ -646,6 +673,52 @@ export default function Settings() {
               </button>
             );
           })}
+        </div>
+      </BottomSheet>
+
+      <BottomSheet
+        isOpen={modal === 'userRole'}
+        onClose={() => setModal(null)}
+        title="طريقة استخدام التطبيق"
+        footer={
+          <Button fullWidth variant="primary" size="xl" onClick={saveUserRole} loading={saving}>
+            حفظ
+          </Button>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          {USER_ROLE_OPTIONS.map(opt => {
+            const selected = pendingUserRole === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setPendingUserRole(opt)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-3)',
+                  padding: 'var(--space-4)',
+                  borderRadius: 'var(--radius-xl)',
+                  border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                  background: selected ? 'var(--accent-light)' : 'var(--bg-card)',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-family)',
+                  textAlign: 'start',
+                  width: '100%',
+                  transition: 'all var(--transition-fast)',
+                }}
+              >
+                <span style={{ flex: 1, fontSize: 'var(--font-size-base)', fontWeight: selected ? 700 : 500, color: selected ? 'var(--accent)' : 'var(--text-primary)' }}>
+                  {USER_ROLE_LABELS[opt]}
+                </span>
+                {selected && <CheckIcon size={16} color="var(--accent)" />}
+              </button>
+            );
+          })}
+          <p style={{ margin: 'var(--space-1) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+            يغيّر بعض العبارات والاقتراحات فقط. بياناتك وبنودك تبقى كما هي.
+          </p>
         </div>
       </BottomSheet>
 

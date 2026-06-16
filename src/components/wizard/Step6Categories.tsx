@@ -2,14 +2,19 @@ import React from 'react';
 import Button from '../common/Button';
 import { DEFAULT_CATEGORIES } from '../../types';
 
+interface CategoryOption {
+  name: string;
+}
+
 interface Step6CategoriesProps {
   selected: string[];
   onToggle: (name: string) => void;
   onComplete: () => void;
   loading?: boolean;
+  categories?: CategoryOption[];
 }
 
-export default function Step6Categories({ selected, onToggle, onComplete, loading = false }: Step6CategoriesProps) {
+export default function Step6Categories({ selected, onToggle, onComplete, loading = false, categories = DEFAULT_CATEGORIES }: Step6CategoriesProps) {
   return (
     <div style={screen}>
       <div style={scroll}>
@@ -18,7 +23,7 @@ export default function Step6Categories({ selected, onToggle, onComplete, loadin
         <p style={subtitle}>اختار اللي يناسبك، وتقدر تضيف أو تحذف لاحقاً.</p>
 
         <div style={grid}>
-          {DEFAULT_CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
             const isSelected = selected.includes(cat.name);
             return (
               <button
@@ -44,7 +49,7 @@ export default function Step6Categories({ selected, onToggle, onComplete, loadin
         <p style={countNote}>
           {selected.length === 0
             ? 'لم تختر أي شيء بعد'
-            : `اخترت ${selected.length} من ${DEFAULT_CATEGORIES.length}`}
+            : `اخترت ${selected.length} من ${categories.length}`}
         </p>
       </div>
 
