@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Loader } from '../components/common/Loader';
+import { getRolePlanLabel } from '../types';
 
 function fmt(n: number): string {
   return n.toLocaleString('en-US') + ' د.إ';
@@ -103,7 +104,7 @@ export default function ReportPreview() {
           ))}
         </div>
 
-        <h2 style={h2Style}>خطة الزواج</h2>
+        <h2 style={h2Style}>{getRolePlanLabel(settings.userRole)}</h2>
         {activeCategories.length > 0 ? (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '360px' }}>

@@ -1,5 +1,6 @@
 import { formatCurrency } from './formatting';
-import type { BudgetStats } from '../types';
+import { getRolePlanTitle } from '../types';
+import type { BudgetStats, UserRole } from '../types';
 
 export interface ShareTopCat {
   name: string;
@@ -149,6 +150,7 @@ export async function generateShareImage(
   topCats: ShareTopCat[],
   paidItems: number,
   totalItems: number,
+  role?: UserRole,
 ): Promise<Blob> {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
@@ -258,8 +260,8 @@ export async function generateShareImage(
   t(ctx, 'ملخص خطة الزواج', 26, 500, C.sec, 'center', W / 2, y + 21);
   y += 36;
 
-  // Plan title — 34px bold
-  t(ctx, `خطة زواج ${name}`, 34, 700, C.pri, 'center', W / 2, y + 27);
+  // Plan title — 34px bold (role-aware)
+  t(ctx, getRolePlanTitle(role, name), 34, 700, C.pri, 'center', W / 2, y + 27);
   y += 46;
 
   // ══════════════════════════════════════════════

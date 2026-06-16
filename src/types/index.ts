@@ -174,13 +174,64 @@ export interface NameStepCopy {
 export function getNameStepCopy(role?: UserRole): NameStepCopy {
   switch (role) {
     case 'groom':
-      return { title: 'شو اسمك؟', subtitle: 'خلنا نرتب لك حسبة الزواج باسمك.', fieldLabel: 'اسمك', placeholder: 'اكتب اسمك' };
+      return { title: 'شو اسمك؟', subtitle: 'خلنا نرتب لك حسبة الزواج باسمك.', fieldLabel: 'اسمك', placeholder: 'مثلاً: عبدالله' };
     case 'bride':
-      return { title: 'شو اسمج؟', subtitle: 'خلنا نرتب لج تجهيزات الزواج باسمج.', fieldLabel: 'اسمج', placeholder: 'اكتبي اسمج' };
+      return { title: 'شو اسمج؟', subtitle: 'خلنا نرتب لج تجهيزات الزواج بوضوح.', fieldLabel: 'اسمج', placeholder: 'مثلاً: مريم' };
     case 'couple':
-      return { title: 'شو نكتب اسم الخطة؟', subtitle: 'مثلاً: خطة زواج أحمد ومريم', fieldLabel: 'اسم الخطة', placeholder: 'مثلاً: زواج أحمد ومريم' };
+      return { title: 'شو نكتب اسم الخطة؟', subtitle: 'مثلاً: عبدالله ومريم', fieldLabel: 'اسم الخطة', placeholder: 'مثلاً: عبدالله ومريم' };
     default:
-      return { title: 'شو اسمك؟', subtitle: 'خلنا نرتب لك التجربة.', fieldLabel: 'اسمك', placeholder: 'اكتب اسمك' };
+      return { title: 'شو اسمك؟', subtitle: 'خلنا نرتب لك التجربة.', fieldLabel: 'الاسم', placeholder: 'مثلاً: عبدالله' };
+  }
+}
+
+/**
+ * Welcome-step greeting LEAD (the text before the highlighted name).
+ * Couple mode is structurally different — the name is a plan name, so we say
+ * "تمام، خلونا نبدأ خطة {name}" instead of greeting a single person.
+ */
+export function getRoleGreeting(role?: UserRole): string {
+  switch (role) {
+    case 'bride':  return 'الله حيّاج يا';
+    case 'couple': return 'تمام، خلونا نبدأ خطة';
+    default:       return 'الله حيّه يا';
+  }
+}
+
+/** Welcome-step subtitle (distinct from the shorter dashboard tagline). */
+export function getRoleWelcomeSubtitle(role?: UserRole): string {
+  switch (role) {
+    case 'groom':  return 'خلنا نرتب حسبة الزواج خطوة بخطوة، بدون تعقيد.';
+    case 'bride':  return 'خلنا نرتب تجهيزات الزواج خطوة بخطوة، بدون تعقيد.';
+    case 'couple': return 'بنرتب الخطة مع بعض خطوة بخطوة، بدون تعقيد.';
+    default:       return 'بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد.';
+  }
+}
+
+/** Plan title with the user's name — for share image / preview. */
+export function getRolePlanTitle(role: UserRole | undefined, name: string): string {
+  switch (role) {
+    case 'bride':  return `خطة تجهيزات ${name}`;
+    case 'couple': return `خطة ${name}`;
+    default:       return `خطة زواج ${name}`;
+  }
+}
+
+/** Plan label without a name — for report section headings. */
+export function getRolePlanLabel(role?: UserRole): string {
+  switch (role) {
+    case 'bride':  return 'خطة التجهيزات';
+    case 'couple': return 'الخطة';
+    default:       return 'خطة الزواج';
+  }
+}
+
+/** Empty-state copy for "no items yet" surfaces (plan-level). */
+export function getRoleEmptyState(role?: UserRole): string {
+  switch (role) {
+    case 'groom':  return 'ما أضفت بنود بعد. ابدأ بأول بند في حسبة الزواج.';
+    case 'bride':  return 'ما أضفتي تجهيزات بعد. ابدئي بأول بند.';
+    case 'couple': return 'ما أضفتوا بنود بعد. ابدؤوا بأول بند في الخطة.';
+    default:       return 'ما أضفت شيء بعد. ابدأ بأول بند في الخطة.';
   }
 }
 

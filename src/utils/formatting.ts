@@ -1,4 +1,4 @@
-import { formatDistanceToNow, differenceInDays, format, parseISO } from 'date-fns';
+import { formatDistanceToNow, differenceInCalendarDays, format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 export function formatCurrency(amount: number): string {
@@ -31,9 +31,12 @@ export function formatDateArabic(dateStr: string): string {
 
 export function getDaysRemaining(weddingDate: string): number | null {
   try {
+    // Calendar-day difference (start-of-day to start-of-day) so "tomorrow" = 1,
+    // not 0 — avoids the <24h truncation of differenceInDays. parseISO yields a
+    // local date at 00:00; differenceInCalendarDays ignores time-of-day.
     const date = parseISO(weddingDate);
-    const days = differenceInDays(date, new Date());
-    return days;
+    if (isNaN(date.getTime())) return null;
+    return differenceInCalendarDays(date, new Date());
   } catch {
     return null;
   }

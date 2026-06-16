@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import * as db from '../db/database';
 import { downloadJSON } from '../utils/export';
-import { validateBackupFile, validateBudget, validateWeddingDate, getTodayDateInputValue, isPastDate } from '../utils/validation';
+import { validateBackupFile, validateBudget, validateWeddingDate, getTomorrowDateInputValue, isFutureDateOnly } from '../utils/validation';
 import { parseCurrencyInput, generateId, now } from '../utils/formatting';
 import {
   requestNotificationPermission,
@@ -612,9 +612,9 @@ export default function Settings() {
               value={fieldValue}
               onChange={setFieldValue}
               type="date"
-              min={getTodayDateInputValue()}
+              min={getTomorrowDateInputValue()}
               error={fieldError}
-              hint={isPastDate(settings.weddingDate) ? 'تاريخك الحالي قديم — حدّثه ليكون اليوم أو بعده.' : undefined}
+              hint={settings.weddingDate && !isFutureDateOnly(settings.weddingDate) ? 'تاريخك الحالي قديم — اختر تاريخ بعد اليوم.' : undefined}
               autoFocus
             />
           )}

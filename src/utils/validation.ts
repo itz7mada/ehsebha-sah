@@ -9,7 +9,7 @@ export function validateName(name: string): string | null {
 }
 
 export function validateBudget(value: number): string | null {
-  if (isNaN(value) || value < 0) return 'يرجى إدخال مبلغ صحيح';
+  if (isNaN(value) || value < 1) return 'حط ميزانية أكبر من 0';
   if (value > 100_000_000) return 'المبلغ كبير جدًا';
   return null;
 }
@@ -104,6 +104,16 @@ export function getTodayDateInputValue(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+/** Local YYYY-MM-DD for tomorrow — used as the min for future-only dates. */
+export function getTomorrowDateInputValue(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 /** True if a YYYY-MM-DD string is strictly before local today. */
 export function isPastDate(dateStr: string): boolean {
   if (!dateStr) return false;
@@ -111,10 +121,16 @@ export function isPastDate(dateStr: string): boolean {
   return dateStr < getTodayDateInputValue();
 }
 
+/** True only if a YYYY-MM-DD string is strictly after local today (tomorrow+). */
+export function isFutureDateOnly(dateStr: string): boolean {
+  if (!dateStr) return false;
+  return dateStr > getTodayDateInputValue();
+}
+
 export function validateWeddingDate(dateStr: string): string | null {
   if (!dateStr) return 'اختر تاريخ الزواج';
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return 'التاريخ غير صحيح';
-  if (isPastDate(dateStr)) return 'تاريخ الزواج لازم يكون اليوم أو بعده';
+  if (!isFutureDateOnly(dateStr)) return 'تاريخ الزواج لازم يكون بعد اليوم';
   return null;
 }

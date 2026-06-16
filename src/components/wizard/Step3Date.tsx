@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import { validateWeddingDate, getTodayDateInputValue } from '../../utils/validation';
+import { validateWeddingDate, getTomorrowDateInputValue } from '../../utils/validation';
 
 interface Step3DateProps {
   value: string;
@@ -9,7 +9,7 @@ interface Step3DateProps {
 }
 
 export default function Step3Date({ value, onChange, onNext }: Step3DateProps) {
-  const today = getTodayDateInputValue();
+  const today = getTomorrowDateInputValue();
   const error = validateWeddingDate(value);
   const canProceed = error === null;
   // Only surface the error once the user has actually picked a date.

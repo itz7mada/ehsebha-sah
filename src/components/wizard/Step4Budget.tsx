@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from '../common/Button';
 import { parseCurrencyInput, formatCurrency, normalizeDigits } from '../../utils/formatting';
+import { validateBudget } from '../../utils/validation';
 
 interface Step4BudgetProps {
   value: number;
@@ -18,6 +19,10 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
     onChange(parseCurrencyInput(normalized));
   }
 
+  const error = validateBudget(value);
+  const canProceed = error === null;
+  // Only surface the error once the user has typed something invalid (e.g. 0).
+  const showError = rawInput.trim() !== '' && !!error;
   const displayFormatted = value > 0 ? formatCurrency(value) : null;
   const borderColor = focused ? 'var(--accent)' : 'var(--border)';
   const ringColor = focused ? '0 0 0 3px var(--accent-light)' : '0 1px 3px rgba(0,0,0,0.05)';
@@ -64,14 +69,16 @@ export default function Step4Budget({ value, onChange, onNext }: Step4BudgetProp
               <span className="num" style={{ fontWeight: 700, color: 'var(--accent)' }}>{displayFormatted}</span>
             </p>
           )}
-          <p style={hint}>تقدر تعدل الرقم لاحقاً من الإعدادات.</p>
+          {showError
+            ? <p style={errorText}>{error}</p>
+            : <p style={hint}>تقدر تعدلها لاحقاً من الإعدادات.</p>}
         </div>
 
         <div style={{ flex: 1 }} />
       </div>
 
       <div style={footer}>
-        <Button variant="primary" size="lg" fullWidth onClick={onNext}>
+        <Button variant="primary" size="lg" fullWidth disabled={!canProceed} onClick={onNext}>
           التالي
         </Button>
       </div>
@@ -93,3 +100,4 @@ const prefix: React.CSSProperties = { padding: '0 var(--space-3)', fontSize: 'va
 const numInput: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', background: 'transparent', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-family)', padding: 'var(--space-3) var(--space-4)', direction: 'ltr', width: '100%' };
 const previewText: React.CSSProperties = { margin: 'var(--space-3) 0 0', fontSize: 'var(--font-size-sm)' };
 const hint: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.5 };
+const errorText: React.CSSProperties = { margin: 'var(--space-2) 0 0', fontSize: 'var(--font-size-xs)', color: 'var(--danger)', fontWeight: 600, lineHeight: 1.5 };

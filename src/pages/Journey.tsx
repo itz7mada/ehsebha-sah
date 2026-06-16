@@ -1,11 +1,12 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/formatting';
+import { getRoleEmptyState } from '../types';
 import type { Category, ExpenseItem } from '../types';
 
 export default function Journey() {
   const { state } = useApp();
-  const { expenses, categories, stats } = state;
+  const { expenses, categories, stats, settings } = state;
 
   const daysRemaining = stats?.daysRemaining ?? null;
   const paidItems = expenses.filter(e => e.status === 'paid');
@@ -72,7 +73,7 @@ export default function Journey() {
               رحلتك تبدأ من هنا
             </span>
             <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', lineHeight: 1.7, margin: 0, maxWidth: '260px', textAlign: 'center' }}>
-              ابدأ بإضافة عناصر في خطتك وستظهر هنا تلقائيًا
+              {getRoleEmptyState(settings?.userRole)}
             </p>
           </div>
         ) : (

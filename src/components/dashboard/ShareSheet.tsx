@@ -3,6 +3,7 @@ import { BottomSheet } from '../common/BottomSheet';
 import { Button } from '../common/Button';
 import { formatCurrency } from '../../utils/formatting';
 import { generateShareImage, type ShareTopCat } from '../../utils/shareImage';
+import { getRolePlanTitle } from '../../types';
 import type { Settings, BudgetStats, Category, ExpenseItem } from '../../types';
 
 interface ShareSheetProps {
@@ -39,7 +40,7 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
   async function handleShare() {
     setGenerating(true);
     try {
-      const blob = await generateShareImage(settings.name, stats, topCats, paidItems, totalItems);
+      const blob = await generateShareImage(settings.name, stats, topCats, paidItems, totalItems, settings.userRole);
       const file = new File([blob], 'خطة-زواجي.png', { type: 'image/png' });
 
       if (navigator.canShare?.({ files: [file] })) {
@@ -98,7 +99,7 @@ export function ShareSheet({ isOpen, onClose, settings, stats, categories, expen
           </div>
 
           {/* Plan title */}
-          <p style={planTitle}>خطة زواج {settings.name}</p>
+          <p style={planTitle}>{getRolePlanTitle(settings.userRole, settings.name)}</p>
 
           {/* ─── Hero: remaining ─── */}
           <div style={heroSection}>

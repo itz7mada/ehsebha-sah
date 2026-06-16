@@ -9,6 +9,7 @@ import { PlusIcon, TrashIcon } from '../components/common/Icons';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import * as db from '../db/database';
 import { generateId } from '../utils/formatting';
+import { getRoleEmptyState } from '../types';
 import type { Category } from '../types';
 
 const EMOJI_OPTIONS = ['💍', '✨', '👗', '🎊', '🏠', '🌙', '🛡️', '📋', '💼', '🎁', '🎂', '🚗', '✈️', '🏥', '🎓', '📸', '🎵', '🌹', '🎀', '🌺'];
@@ -169,7 +170,7 @@ export function Sections() {
               <PlusIcon size={24} color="var(--text-tertiary)" />
             </div>
             <h3>ابدأ بخطتك</h3>
-            <p>أضف أول بند رئيسي لتبدأ بتنظيم ميزانية زفافك</p>
+            <p>{getRoleEmptyState(state.settings?.userRole)}</p>
             <div style={{ marginTop: 'var(--space-5)' }}>
               <Button variant="primary" icon={<PlusIcon size={16} />} onClick={openSheet}>
                 إضافة بند رئيسي

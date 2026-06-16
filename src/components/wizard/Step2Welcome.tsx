@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import { roleTagline } from '../../types';
+import { getRoleGreeting, getRoleWelcomeSubtitle } from '../../types';
 import type { UserRole } from '../../types';
 
 interface Step2WelcomeProps {
@@ -16,15 +16,14 @@ const rows = [
 ];
 
 export default function Step2Welcome({ name, role, onNext }: Step2WelcomeProps) {
-  const subtitleText = role && role !== 'general'
-    ? `${roleTagline(role)}، بدون تعقيد وبدون صداع.`
-    : 'بنرتب رحلة الزواج خطوة بخطوة، بدون تعقيد وبدون صداع.';
+  const greetingLead = getRoleGreeting(role);
+  const subtitleText = getRoleWelcomeSubtitle(role);
   return (
     <div style={screen}>
       <div style={scroll}>
         <p style={stepLabel}>أهلاً وسهلاً</p>
         <h1 style={title}>
-          الله حيّه يا{' '}
+          {greetingLead}{' '}
           <span style={{ color: 'var(--accent)' }}>{name}</span>
         </h1>
         <p style={subtitle}>{subtitleText}</p>
