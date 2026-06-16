@@ -5,6 +5,7 @@ import { Input } from '../common/Input';
 import { useApp } from '../../context/AppContext';
 import * as db from '../../db/database';
 import { formatCurrency, generateId, now, parseCurrencyInput } from '../../utils/formatting';
+import { isPositiveAmount, AMOUNT_POSITIVE_ERROR } from '../../utils/validation';
 import type { ExpenseItem, TransactionType } from '../../types';
 
 const KIND_LABELS: Record<TransactionType, string> = {
@@ -81,7 +82,9 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (kind !== 'scheduled' && amount <= 0) errs.amount = 'أدخل المبلغ المدفوع';
+    // An actual payment (partial/paid) must carry a real amount > 0.
+    // 'scheduled' is just a plan (no amount entered) and stays valid.
+    if (kind !== 'scheduled' && !isPositiveAmount(amount)) errs.amount = AMOUNT_POSITIVE_ERROR;
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -154,7 +157,7 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
     }
   }
 
-  const canSave = kind === 'scheduled' || amount > 0;
+  const canSave = kind === 'scheduled' || isPositiveAmount(amount);
 
   if (!item) return null;
 
@@ -163,7 +166,6 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
       isOpen={isOpen}
       onClose={onClose}
       title="إضافة دفعة"
-      snapHeight="full"
       footer={
         <Button
           variant="primary"
@@ -177,7 +179,7 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
         </Button>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
 
         {/* Item context */}
         <div style={{

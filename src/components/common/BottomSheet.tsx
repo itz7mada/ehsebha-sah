@@ -12,6 +12,9 @@ interface BottomSheetProps {
 
 
 export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeight = 'auto' }: BottomSheetProps) {
+  // Height of the on-screen keyboard (iOS): lifts the sheet so inputs/footer stay visible.
+  const [kbInset, setKbInset] = React.useState(0);
+
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -26,7 +29,29 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
     };
   }, [isOpen]);
 
+  // Keyboard-safe: track the visual viewport so the sheet rises above the keyboard
+  // instead of hiding behind it (the classic iOS fixed-position jump).
+  React.useEffect(() => {
+    if (!isOpen || typeof window === 'undefined' || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const update = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKbInset(inset > 80 ? inset : 0); // ignore tiny URL-bar deltas
+    };
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      setKbInset(0);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  // Non-full sheets cap at ~92dvh so the page peeks behind (native feel); full uses the screen.
+  const capVh = snapHeight === 'full' ? '100dvh' : '92dvh';
 
   const overlayStyle: React.CSSProperties = {
     position: 'fixed',
@@ -38,7 +63,7 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
 
   const sheetStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: 0,
+    bottom: kbInset,
     insetInlineStart: 0,
     insetInlineEnd: 0,
     zIndex: 101,
@@ -46,8 +71,9 @@ export function BottomSheet({ isOpen, onClose, title, children, footer, snapHeig
     borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0',
     boxShadow: 'var(--shadow-xl)',
     animation: 'slideUp 300ms cubic-bezier(0.32,0.72,0,1) both',
-    maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 12px)',
-    height: snapHeight === 'full' ? 'calc(100dvh - env(safe-area-inset-top, 0px) - 12px)' : undefined,
+    maxHeight: `calc(${capVh} - env(safe-area-inset-top, 0px) - 12px - ${kbInset}px)`,
+    height: snapHeight === 'full' ? `calc(100dvh - env(safe-area-inset-top, 0px) - 12px - ${kbInset}px)` : undefined,
+    transition: 'bottom 220ms ease, max-height 220ms ease',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',

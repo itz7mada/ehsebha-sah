@@ -5,6 +5,7 @@ import { Input } from '../common/Input';
 import { useApp } from '../../context/AppContext';
 import * as db from '../../db/database';
 import { generateId, now, parseCurrencyInput } from '../../utils/formatting';
+import { isOptionalPositiveAmount, AMOUNT_POSITIVE_ERROR } from '../../utils/validation';
 import type { ExpenseItem } from '../../types';
 
 interface AddExpenseSheetProps {
@@ -43,6 +44,8 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'أدخل اسم العنصر';
+    // Planned amount is optional, but a typed value must be > 0.
+    if (!isOptionalPositiveAmount(amountRaw)) errs.amount = AMOUNT_POSITIVE_ERROR;
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -102,7 +105,6 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
       isOpen={isOpen}
       onClose={onClose}
       title={editItem ? 'تعديل العنصر' : 'إضافة عنصر'}
-      snapHeight="full"
       footer={
         <Button
           variant="primary"
@@ -116,11 +118,11 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
         </Button>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
 
         {!editItem && (
           <p style={subtitleStyle}>
-            اكتب الشي اللي تبغي ترتبه داخل هذا البند، وحط له مبلغ تقريبي إذا حبيت.
+            اكتب اسم العنصر، والمبلغ اختياري.
           </p>
         )}
 
@@ -140,6 +142,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
           type="number"
           placeholder="0"
           prefix="د.إ"
+          error={errors.amount}
         />
 
         <Input

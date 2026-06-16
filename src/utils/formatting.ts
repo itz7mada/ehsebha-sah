@@ -56,6 +56,20 @@ export function normalizeDigits(value: string): string {
     .replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 0x06F0));
 }
 
+/**
+ * Normalize an Arabic name for safe comparison (e.g. dedup suggestions vs added items):
+ * trims, collapses repeated spaces, unifies alef/ya/ta-marbuta variants, strips diacritics.
+ */
+export function normalizeArabicName(value: string): string {
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[أإآ]/g, 'ا') // أ إ آ -> ا
+    .replace(/ى/g, 'ي')               // ى -> ي
+    .replace(/ة/g, 'ه')               // ة -> ه
+    .replace(/[ً-ْـ]/g, '');      // diacritics + tatweel
+}
+
 export function parseCurrencyInput(value: string): number {
   const cleaned = normalizeDigits(value).replace(/[^0-9.]/g, '');
   const parsed = parseFloat(cleaned);

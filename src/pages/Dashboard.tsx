@@ -7,8 +7,9 @@ import { SectionCard } from '../components/expenses/SectionCard';
 import { BottomSheet } from '../components/common/BottomSheet';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
-import { PlusIcon, ShareIcon } from '../components/common/Icons';
+import { PlusIcon, ShareIcon, CalendarIcon, CheckIcon, HeartIcon, AlertIcon } from '../components/common/Icons';
 import { getDaysLabel, maskAmount, parseCurrencyInput, formatCurrency, now, generateId, normalizeDigits } from '../utils/formatting';
+import { isOptionalPositiveAmount, AMOUNT_POSITIVE_ERROR } from '../utils/validation';
 import * as db from '../db/database';
 import { roleTagline } from '../types';
 import type { Category } from '../types';
@@ -36,6 +37,7 @@ export default function Dashboard() {
   const [newCatName, setNewCatName] = useState('');
   const [newCatBudgetRaw, setNewCatBudgetRaw] = useState('');
   const [newCatNameErr, setNewCatNameErr] = useState('');
+  const [newCatBudgetErr, setNewCatBudgetErr] = useState('');
   const [newCatColor, setNewCatColor] = useState(CAT_COLORS[0]);
   const [newCatSaving, setNewCatSaving] = useState(false);
   const [hideAmounts, setHideAmounts] = useState(
@@ -54,6 +56,11 @@ export default function Dashboard() {
   async function handleAddCategory() {
     if (!newCatName.trim()) {
       setNewCatNameErr('أدخل الاسم');
+      return;
+    }
+    // Planned budget is optional, but a typed value must be > 0.
+    if (!isOptionalPositiveAmount(newCatBudgetRaw)) {
+      setNewCatBudgetErr(AMOUNT_POSITIVE_ERROR);
       return;
     }
     setNewCatSaving(true);
@@ -203,12 +210,16 @@ export default function Dashboard() {
             label="باقي على الزواج"
             value={daysRemaining !== null ? String(Math.abs(daysRemaining)) : '—'}
             sub={daysRemaining !== null ? getDaysLabel(daysRemaining) : 'لم تُحدَّد التاريخ'}
+            icon={<CalendarIcon size={15} color="var(--accent)" />}
+            iconBg="var(--accent-light)"
             onClick={() => navigate('/journey')}
           />
           <MiniCard
             label="إنجاز الخطة"
             value={totalItems > 0 ? `${paidItems}/${totalItems}` : '—'}
             sub={totalItems > 0 ? 'بند مدفوع' : 'لا توجد بنود'}
+            icon={<CheckIcon size={15} color="var(--success)" />}
+            iconBg="var(--success-light)"
             onClick={() => navigate('/journey')}
           />
         </div>
@@ -216,10 +227,15 @@ export default function Dashboard() {
         {/* المساهمات + احتياطي الطوارئ — always visible */}
         <div style={miniGridStyle}>
           <button type="button" onClick={() => navigate('/support')} style={infoCardStyle}>
-            <span style={infoCardLabelStyle}>المساهمات</span>
+            <div style={metricTopRowStyle}>
+              <span style={infoCardLabelStyle}>المساهمات</span>
+              <span style={{ ...iconBadgeStyle, background: 'var(--success-light)' }} aria-hidden="true">
+                <HeartIcon size={15} color="var(--success)" />
+              </span>
+            </div>
             {supportTotal > 0 ? (
               <>
-                <span className="num" style={{ fontSize: 'var(--font-size-md)', fontWeight: 800, color: 'var(--success)' }}>
+                <span className="num" style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--success)', lineHeight: 1.05 }}>
                   {maskAmount(supportReceived, hideAmounts)}
                 </span>
                 {supportExpected > 0 && (
@@ -239,10 +255,15 @@ export default function Dashboard() {
           </button>
 
           <button type="button" onClick={openReserveSheet} style={infoCardStyle}>
-            <span style={infoCardLabelStyle}>احتياطي الطوارئ</span>
+            <div style={metricTopRowStyle}>
+              <span style={infoCardLabelStyle}>احتياطي الطوارئ</span>
+              <span style={{ ...iconBadgeStyle, background: 'var(--warning-light)' }} aria-hidden="true">
+                <AlertIcon size={15} color="var(--warning)" />
+              </span>
+            </div>
             {emergencyReserve > 0 ? (
               <>
-                <span className="num" style={{ fontSize: 'var(--font-size-md)', fontWeight: 800, color: 'var(--warning)' }}>
+                <span className="num" style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--warning)', lineHeight: 1.05 }}>
                   {maskAmount(emergencyReserve, hideAmounts)}
                 </span>
                 <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
@@ -283,7 +304,7 @@ export default function Dashboard() {
           variant="primary"
           size="xl"
           fullWidth
-          onClick={() => { setNewCatName(''); setNewCatBudgetRaw(''); setNewCatNameErr(''); setNewCatColor(CAT_COLORS[activeCategories.length % CAT_COLORS.length]); setShowAddCatSheet(true); }}
+          onClick={() => { setNewCatName(''); setNewCatBudgetRaw(''); setNewCatNameErr(''); setNewCatBudgetErr(''); setNewCatColor(CAT_COLORS[activeCategories.length % CAT_COLORS.length]); setShowAddCatSheet(true); }}
           icon={<PlusIcon size={20} color="currentColor" />}
         >
           إضافة بند رئيسي
@@ -320,10 +341,11 @@ export default function Dashboard() {
           <Input
             label="الميزانية المخططة (اختياري)"
             value={newCatBudgetRaw}
-            onChange={setNewCatBudgetRaw}
+            onChange={v => { setNewCatBudgetRaw(v); if (newCatBudgetErr) setNewCatBudgetErr(''); }}
             type="number"
             placeholder="0"
             prefix="د.إ"
+            error={newCatBudgetErr}
           />
 
           {/* Color picker */}
@@ -517,7 +539,7 @@ export default function Dashboard() {
   );
 }
 
-function MiniCard({ label, value, sub, onClick }: { label: string; value: string; sub: string; onClick: () => void }) {
+function MiniCard({ label, value, sub, icon, iconBg, onClick }: { label: string; value: string; sub: string; icon: React.ReactNode; iconBg: string; onClick: () => void }) {
   const [active, setActive] = useState(false);
   return (
     <button
@@ -525,32 +547,78 @@ function MiniCard({ label, value, sub, onClick }: { label: string; value: string
       onClick={onClick}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
-      style={{
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-xl)',
-        boxShadow: active ? 'var(--shadow-md)' : 'var(--shadow-sm)',
-        border: '1px solid var(--border-light)',
-        padding: '14px 12px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '3px',
-        textAlign: 'center',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-family)',
-        WebkitTapHighlightColor: 'transparent',
-        transform: active ? 'translateY(-1px)' : undefined,
-        transition: 'all var(--transition-fast)',
-        width: '100%',
-      }}
+      style={metricCardStyle(active)}
     >
-      <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{label}</span>
-      <span className="num" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>{value}</span>
-      <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{sub}</span>
+      <div style={metricTopRowStyle}>
+        <span style={metricLabelStyle}>{label}</span>
+        <span style={{ ...iconBadgeStyle, background: iconBg }} aria-hidden="true">{icon}</span>
+      </div>
+      <span className="num" style={metricValueStyle}>{value}</span>
+      <span style={metricSubStyle}>{sub}</span>
     </button>
   );
 }
+
+function metricCardStyle(active: boolean): React.CSSProperties {
+  return {
+    background: 'var(--bg-card)',
+    borderRadius: 'var(--radius-xl)',
+    boxShadow: active
+      ? 'var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.05)'
+      : 'var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04)',
+    border: '1px solid var(--border-light)',
+    padding: '15px 16px',
+    minHeight: '106px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    gap: '8px',
+    textAlign: 'start',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-family)',
+    WebkitTapHighlightColor: 'transparent',
+    transform: active ? 'translateY(-2px)' : undefined,
+    transition: 'all var(--transition-fast)',
+    width: '100%',
+  };
+}
+
+const metricTopRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  width: '100%',
+};
+
+const metricLabelStyle: React.CSSProperties = {
+  fontSize: '12px',
+  color: 'var(--text-tertiary)',
+  fontWeight: 600,
+};
+
+const iconBadgeStyle: React.CSSProperties = {
+  width: '28px',
+  height: '28px',
+  borderRadius: 'var(--radius-full)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+};
+
+const metricValueStyle: React.CSSProperties = {
+  fontSize: '24px',
+  fontWeight: 800,
+  color: 'var(--text-primary)',
+  lineHeight: 1.05,
+};
+
+const metricSubStyle: React.CSSProperties = {
+  fontSize: '11px',
+  color: 'var(--text-secondary)',
+  fontWeight: 500,
+};
 
 const pageStyle: React.CSSProperties = {
   minHeight: '100dvh',
@@ -564,7 +632,7 @@ const contentStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 'var(--space-4)',
-  paddingBottom: 'calc(var(--nav-height) + var(--safe-bottom) + 16px)',
+  paddingBottom: 'calc(var(--nav-height) + var(--safe-bottom) + 28px)',
   paddingTop: 'var(--page-top)',
 };
 
@@ -615,13 +683,15 @@ const miniGridStyle: React.CSSProperties = {
 const infoCardStyle: React.CSSProperties = {
   background: 'var(--bg-card)',
   borderRadius: 'var(--radius-xl)',
-  boxShadow: 'var(--shadow-sm)',
+  boxShadow: 'var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04)',
   border: '1px solid var(--border-light)',
-  padding: '14px 12px',
+  padding: '15px 16px',
+  minHeight: '106px',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
-  gap: '4px',
+  justifyContent: 'center',
+  gap: '8px',
   cursor: 'pointer',
   fontFamily: 'var(--font-family)',
   textAlign: 'start',
@@ -630,10 +700,9 @@ const infoCardStyle: React.CSSProperties = {
 };
 
 const infoCardLabelStyle: React.CSSProperties = {
-  fontSize: '11px',
+  fontSize: '12px',
   color: 'var(--text-tertiary)',
-  fontWeight: 500,
-  marginBottom: '2px',
+  fontWeight: 600,
 };
 
 const infoCardActionStyle: React.CSSProperties = {

@@ -53,8 +53,8 @@ export function SectionCard({ category, expenses, onClick, hideAmounts = false }
     borderRadius: 'var(--radius-xl)',
     border: `1px solid ${allPaid ? 'var(--success)' : budgetStatus === 'over' ? 'var(--danger-light)' : 'var(--border-light)'}`,
     boxShadow: hovered
-      ? (allPaid ? '0 0 0 2px var(--success-light), var(--shadow-md)' : 'var(--shadow-md)')
-      : (allPaid ? '0 0 0 2px var(--success-light)' : 'var(--shadow-sm)'),
+      ? (allPaid ? '0 0 0 2px var(--success-light), var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.04)' : 'var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.04)')
+      : (allPaid ? '0 0 0 2px var(--success-light), inset 0 1px 0 rgba(255,255,255,0.04)' : 'var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.04)'),
     padding: 'var(--space-4)',
     cursor: 'pointer',
     transition: 'all var(--transition-fast)',
@@ -84,7 +84,7 @@ export function SectionCard({ category, expenses, onClick, hideAmounts = false }
             background: progressColor,
           }} />
           <span style={{
-            fontSize: 'var(--font-size-base)', fontWeight: 700, color: 'var(--text-primary)',
+            fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
             {category.name}
@@ -124,38 +124,86 @@ export function SectionCard({ category, expenses, onClick, hideAmounts = false }
 
       {/* Body */}
       {totals.count === 0 ? (
-        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', textAlign: 'center', padding: 'var(--space-1) 0', margin: 0 }}>
-          ابدأ بأول شيء يناسبك
-        </p>
+        <p style={emptyTextStyle}>ابدأ بأول شيء يناسبك</p>
       ) : (
         <>
-          <ProgressBar value={progressValue} height={5} color={progressColor} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 500 }}>المخطط</span>
-              <span className="num" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {maskAmount(totals.expected, hideAmounts)}
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
-              <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 500 }}>المدفوع</span>
-              <span className="num" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: totals.paid > 0 ? 'var(--success)' : 'var(--text-primary)' }}>
+          <ProgressBar value={progressValue} height={7} color={progressColor} showLabel />
+          <div style={statsRowStyle}>
+            <div style={statColStartStyle}>
+              <span style={statLabelStyle}>المدفوع</span>
+              <span className="num" style={{ ...statValueStyle, color: totals.paid > 0 ? 'var(--success)' : 'var(--text-primary)' }}>
                 {maskAmount(totals.paid, hideAmounts)}
               </span>
             </div>
             {remaining > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 500 }}>المتبقي</span>
-                <span className="num" style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--warning)' }}>
+              <div style={statColMidStyle}>
+                <span style={statLabelStyle}>المتبقي</span>
+                <span className="num" style={{ ...statValueStyle, color: 'var(--warning)' }}>
                   {maskAmount(remaining, hideAmounts)}
                 </span>
               </div>
             )}
+            <div style={statColEndStyle}>
+              <span style={statLabelStyle}>المخطط</span>
+              <span className="num" style={statValueStyle}>
+                {maskAmount(totals.expected, hideAmounts)}
+              </span>
+            </div>
           </div>
         </>
       )}
     </div>
   );
 }
+
+const emptyTextStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-xs)',
+  color: 'var(--text-tertiary)',
+  textAlign: 'center',
+  padding: 'var(--space-1) 0',
+  margin: 0,
+};
+
+const statsRowStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-end',
+  gap: 'var(--space-3)',
+  marginTop: '2px',
+};
+
+const statColStartStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '3px',
+  alignItems: 'flex-start',
+};
+
+const statColMidStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '3px',
+  alignItems: 'center',
+};
+
+const statColEndStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '3px',
+  alignItems: 'flex-end',
+};
+
+const statLabelStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-xs)',
+  color: 'var(--text-tertiary)',
+  fontWeight: 600,
+};
+
+const statValueStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-base)',
+  fontWeight: 700,
+  color: 'var(--text-primary)',
+  lineHeight: 1,
+};
 
 export default SectionCard;

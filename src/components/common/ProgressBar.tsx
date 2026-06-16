@@ -20,7 +20,7 @@ export function ProgressBar({
   const trackStyle: React.CSSProperties = {
     width: '100%',
     height: `${height}px`,
-    background: 'var(--bg-secondary)',
+    background: 'var(--track)',
     borderRadius: 'var(--radius-full)',
     overflow: 'hidden',
     position: 'relative',

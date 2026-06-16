@@ -1,4 +1,23 @@
 import type { BackupData } from '../types';
+import { parseCurrencyInput, normalizeDigits } from './formatting';
+
+/** True if a numeric amount is a real value strictly greater than 0. */
+export function isPositiveAmount(value: number): boolean {
+  return Number.isFinite(value) && value > 0;
+}
+
+/**
+ * Optional positive amount: an empty field is allowed, but if the user typed
+ * anything it must resolve to > 0. Takes the RAW input so "empty" and "0" differ.
+ */
+export function isOptionalPositiveAmount(raw: string): boolean {
+  const cleaned = normalizeDigits(raw).trim();
+  if (cleaned === '') return true;
+  return isPositiveAmount(parseCurrencyInput(cleaned));
+}
+
+/** Shared Arabic error for amounts that must be greater than 0. */
+export const AMOUNT_POSITIVE_ERROR = 'المبلغ لازم يكون أكبر من 0';
 
 export function validateName(name: string): string | null {
   const trimmed = name.trim();

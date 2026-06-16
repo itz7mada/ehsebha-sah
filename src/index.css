@@ -31,6 +31,7 @@
 
   --border: #EEE7DF;
   --border-light: #F4EFEA;
+  --track: rgba(0,0,0,0.07);
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
@@ -83,6 +84,7 @@
   --info-light: rgba(52,152,219,0.15);
   --border: #2A2A26;
   --border-light: #222220;
+  --track: rgba(255,255,255,0.11);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);

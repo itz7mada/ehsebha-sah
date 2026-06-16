@@ -8,7 +8,7 @@ import { ProgressBar } from '../components/common/ProgressBar';
 import { Button } from '../components/common/Button';
 import { PlusIcon, TrashIcon, EditIcon } from '../components/common/Icons';
 import * as db from '../db/database';
-import { formatCurrency } from '../utils/formatting';
+import { formatCurrency, normalizeArabicName } from '../utils/formatting';
 import { getCategoryTotal } from '../utils/calculations';
 import type { ExpenseItem, PaymentStatus } from '../types';
 import { STATUS_LABELS } from '../types';
@@ -348,7 +348,12 @@ export function SectionDetail() {
   }
 
   const suggestions = CATEGORY_SUGGESTIONS[category.name] ?? [];
-  const showSuggestions = totals.count === 0 && suggestions.length > 0;
+  const hasSuggestions = suggestions.length > 0;
+  // Suggestions persist; only the ones already added (by normalized name) drop off.
+  const existingNames = new Set(
+    state.expenses.filter(e => e.categoryId === categoryId).map(e => normalizeArabicName(e.name)),
+  );
+  const remainingSuggestions = suggestions.filter(s => !existingNames.has(normalizeArabicName(s)));
   const deleteTargetItem = deleteTarget ? state.expenses.find(e => e.id === deleteTarget) : null;
 
   return (
@@ -421,7 +426,7 @@ export function SectionDetail() {
         </h2>
 
         {/* Checklist items */}
-        {filtered.length === 0 && !showSuggestions && (
+        {filtered.length === 0 && filter === 'all' && !hasSuggestions && (
           <div className="empty-state">
             <h3>لم تضف عناصر بعد</h3>
             <p>ابدأ بأول شيء يناسبك في هذا البند</p>
@@ -453,24 +458,30 @@ export function SectionDetail() {
           </div>
         )}
 
-        {/* Suggested items when empty */}
-        {showSuggestions && (
+        {/* Suggested items — stay visible; only added ones drop off */}
+        {hasSuggestions && filter === 'all' && (
           <div style={{ marginTop: 'var(--space-4)' }}>
             <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 'var(--space-3)', letterSpacing: '0.04em' }}>
               اقتراحات للبدء
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-              {suggestions.map(name => (
-                <button
-                  key={name}
-                  type="button"
-                  style={suggestionChipStyle}
-                  onClick={() => handleAddNew(name)}
-                >
-                  + {name}
-                </button>
-              ))}
-            </div>
+            {remainingSuggestions.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                {remainingSuggestions.map(name => (
+                  <button
+                    key={name}
+                    type="button"
+                    style={suggestionChipStyle}
+                    onClick={() => handleAddNew(name)}
+                  >
+                    + {name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', margin: 0 }}>
+                كل الاقتراحات انضافت
+              </p>
+            )}
           </div>
         )}
 
