@@ -7,7 +7,7 @@ import { useApp } from '../../context/AppContext';
 import { useToast } from '../common/Toast';
 import * as db from '../../db/database';
 import { generateId, now, parseCurrencyInput } from '../../utils/formatting';
-import { isOptionalPositiveAmount, AMOUNT_POSITIVE_ERROR } from '../../utils/validation';
+import { isPositiveAmount } from '../../utils/validation';
 import { deriveExpenseStatus } from '../../utils/calculations';
 import type { ExpenseItem } from '../../types';
 
@@ -51,8 +51,8 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'أدخل اسم البند';
-    // Planned amount is optional, but a typed value must be > 0.
-    if (!isOptionalPositiveAmount(amountRaw)) errs.amount = AMOUNT_POSITIVE_ERROR;
+    // A planned amount is required — no item without a price (editable later).
+    if (!isPositiveAmount(amount)) errs.amount = 'حط المبلغ المتوقع للبند';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -106,7 +106,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
     }
   }
 
-  const canSave = name.trim().length > 0;
+  const canSave = name.trim().length > 0 && isPositiveAmount(amount);
 
   return (
     <BottomSheet
@@ -130,7 +130,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
 
         {!editItem && (
           <p style={subtitleStyle}>
-            اكتب اسم البند، والمبلغ اختياري.
+            اكتب اسم البند ومبلغه المتوقع.
           </p>
         )}
 
@@ -144,7 +144,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
         />
 
         <Input
-          label="المبلغ المخطط (اختياري)"
+          label="المبلغ المتوقع"
           value={amountRaw}
           onChange={setAmountRaw}
           type="number"
