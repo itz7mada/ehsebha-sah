@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import * as db from '../db/database';
-import { formatCurrency, generateId, now, parseCurrencyInput } from '../utils/formatting';
+import { formatCurrency } from '../utils/formatting';
 import type { SupportItem } from '../types';
 import { Button } from '../components/common/Button';
-import { Input } from '../components/common/Input';
-import { BottomSheet } from '../components/common/BottomSheet';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { PlusIcon, TrashIcon, EditIcon } from '../components/common/Icons';
-
-const emptyForm = { name: '', amount: '', notes: '' };
+import { AddSupportSheet } from '../components/support/AddSupportSheet';
 
 export default function Support() {
   const { state, dispatch } = useApp();
@@ -17,74 +14,18 @@ export default function Support() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<SupportItem | null>(null);
-  const [form, setForm] = useState({ ...emptyForm });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const total = support.reduce((s, i) => s + i.amount, 0);
 
   function openAdd() {
     setEditing(null);
-    setForm({ ...emptyForm });
-    setErrors({});
     setSheetOpen(true);
   }
 
   function openEdit(item: SupportItem) {
     setEditing(item);
-    setForm({ name: item.name, amount: String(item.amount), notes: item.notes || '' });
-    setErrors({});
     setSheetOpen(true);
-  }
-
-  function isValid(): boolean {
-    return form.name.trim().length > 0 && parseCurrencyInput(form.amount) > 0;
-  }
-
-  function validate(): boolean {
-    const errs: Record<string, string> = {};
-    if (!form.name.trim()) errs.name = 'الاسم أو المصدر مطلوب';
-    const amt = parseCurrencyInput(form.amount);
-    if (isNaN(amt) || amt <= 0) errs.amount = 'المبلغ مطلوب وأكبر من صفر';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  }
-
-  async function handleSave() {
-    if (!validate()) return;
-    setSaving(true);
-    try {
-      const isNew = !editing;
-      const item: SupportItem = {
-        id: editing?.id ?? generateId(),
-        name: form.name.trim(),
-        relation: editing?.relation ?? '',
-        amount: parseCurrencyInput(form.amount),
-        status: 'received',
-        notes: form.notes.trim() || undefined,
-        createdAt: editing?.createdAt ?? now(),
-        updatedAt: now(),
-      };
-      await db.saveSupport(item);
-      dispatch({ type: 'UPSERT_SUPPORT', payload: item });
-
-      if (isNew) {
-        const journeyEvent = {
-          id: generateId(),
-          type: 'support_added' as const,
-          title: `أضيفت مساهمة من ${item.name}`,
-          amount: item.amount,
-          date: now(),
-        };
-        await db.addJourneyEvent(journeyEvent);
-        dispatch({ type: 'ADD_JOURNEY', payload: journeyEvent });
-      }
-
-      setSheetOpen(false);
-    } finally {
-      setSaving(false);
-    }
   }
 
   async function handleDelete(id: string) {
@@ -152,51 +93,11 @@ export default function Support() {
       </div>
 
       {/* Add / Edit Sheet */}
-      <BottomSheet
+      <AddSupportSheet
         isOpen={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        title={editing ? 'تعديل مساهمة' : 'إضافة مساهمة'}
-        footer={
-          <Button
-            fullWidth
-            onClick={handleSave}
-            loading={saving}
-            disabled={!isValid()}
-            variant="primary"
-            size="xl"
-          >
-            {editing ? 'حفظ التعديلات' : 'إضافة المساهمة'}
-          </Button>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input
-            label="الاسم أو المصدر"
-            value={form.name}
-            onChange={v => setForm(f => ({ ...f, name: v }))}
-            placeholder="مثال: الوالد"
-            error={errors.name}
-            autoFocus
-          />
-          <Input
-            label="المبلغ"
-            value={form.amount}
-            onChange={v => setForm(f => ({ ...f, amount: v }))}
-            type="number"
-            prefix="د.إ"
-            placeholder="0"
-            error={errors.amount}
-          />
-          <Input
-            label="ملاحظة اختيارية"
-            value={form.notes}
-            onChange={v => setForm(f => ({ ...f, notes: v }))}
-            placeholder="مثال: دفعة للمساعدة في السكن"
-            multiline
-            rows={2}
-          />
-        </div>
-      </BottomSheet>
+        editItem={editing}
+      />
 
       {/* Delete confirm */}
       <ConfirmDialog

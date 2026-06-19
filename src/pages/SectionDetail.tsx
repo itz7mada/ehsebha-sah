@@ -10,6 +10,7 @@ import { PlusIcon, TrashIcon, EditIcon } from '../components/common/Icons';
 import * as db from '../db/database';
 import { formatCurrency, normalizeArabicName } from '../utils/formatting';
 import { getCategoryTotal } from '../utils/calculations';
+import { getSuggestionsForCategory } from '../utils/suggestions';
 import type { ExpenseItem, PaymentStatus } from '../types';
 import { STATUS_LABELS } from '../types';
 
@@ -21,16 +22,6 @@ const FILTERS: { key: FilterTab; label: string }[] = [
   { key: 'partial', label: STATUS_LABELS.partial },
   { key: 'paid', label: STATUS_LABELS.paid },
 ];
-
-const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
-  'المهر': ['الذهب', 'الشبكة', 'دفعة المهر', 'الهدايا'],
-  'الزهبة': ['ذهب العروس', 'السوار', 'الخاتم', 'المصوغات'],
-  'الملجة': ['لبس العريس', 'لبس العروس', 'عباءة العروس', 'الحذاء'],
-  'العرس': ['القاعة', 'الضيافة', 'التصوير', 'الذبايح', 'الدي جي'],
-  'السكن': ['الإيجار', 'الأثاث الأساسي', 'المطبخ', 'الأجهزة الكهربائية'],
-  'شهر العسل': ['التذاكر', 'الفندق', 'المواصلات', 'المصروف اليومي'],
-  'أخرى': ['مصاريف متنوعة'],
-};
 
 function StatusCircle({ status }: { status: PaymentStatus }) {
   if (status === 'paid') {
@@ -347,8 +338,7 @@ export function SectionDetail() {
     );
   }
 
-  const suggestions = CATEGORY_SUGGESTIONS[category.name] ?? [];
-  const hasSuggestions = suggestions.length > 0;
+  const suggestions = getSuggestionsForCategory(category.name);
   // Suggestions persist; only the ones already added (by normalized name) drop off.
   const existingNames = new Set(
     state.expenses.filter(e => e.categoryId === categoryId).map(e => normalizeArabicName(e.name)),
@@ -371,7 +361,7 @@ export function SectionDetail() {
               </span>
             </h1>
             <Button variant="primary" size="sm" icon={<PlusIcon size={15} />} onClick={() => handleAddNew()}>
-              إضافة عنصر
+              إضافة بند
             </Button>
           </div>
         </div>
@@ -421,26 +411,38 @@ export function SectionDetail() {
         )}
 
         {/* Checklist heading */}
-        <h2 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 'var(--space-2)', letterSpacing: '0.04em' }}>
-          العناصر
-        </h2>
+        {totals.count > 0 && (
+          <h2 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 'var(--space-2)', letterSpacing: '0.04em' }}>
+            البنود
+          </h2>
+        )}
 
-        {/* Checklist items */}
-        {filtered.length === 0 && filter === 'all' && !hasSuggestions && (
-          <div className="empty-state">
-            <h3>لم تضف عناصر بعد</h3>
-            <p>ابدأ بأول شيء يناسبك في هذا البند</p>
-            <div style={{ marginTop: 'var(--space-5)' }}>
+        {/* Empty category — friendly invite + ready suggestions + clear add button */}
+        {totals.count === 0 && (
+          <div style={emptyInviteStyle}>
+            <h3 style={emptyInviteTitleStyle}>ما أضفت شيء في {category.name} للحين</h3>
+            <p style={emptyInviteTextStyle}>اختر من الاقتراحات، أو أضف بند خاص فيك.</p>
+            {remainingSuggestions.length > 0 && (
+              <div style={emptyChipsRowStyle}>
+                {remainingSuggestions.map(name => (
+                  <button key={name} type="button" style={suggestionChipStyle} onClick={() => handleAddNew(name)}>
+                    + {name}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ marginTop: 'var(--space-4)' }}>
               <Button variant="primary" icon={<PlusIcon size={16} />} onClick={() => handleAddNew()}>
-                إضافة عنصر
+                إضافة بند
               </Button>
             </div>
           </div>
         )}
 
-        {filtered.length === 0 && filter !== 'all' && (
+        {/* Has items, but none match the active filter */}
+        {totals.count > 0 && filtered.length === 0 && (
           <div className="empty-state">
-            <h3>لا توجد عناصر بهذا الفلتر</h3>
+            <h3>ما فيه بنود بهذا الفلتر</h3>
           </div>
         )}
 
@@ -458,30 +460,24 @@ export function SectionDetail() {
           </div>
         )}
 
-        {/* Suggested items — stay visible; only added ones drop off */}
-        {hasSuggestions && filter === 'all' && (
+        {/* Add more from suggestions — only when the category already has items */}
+        {totals.count > 0 && filter === 'all' && remainingSuggestions.length > 0 && (
           <div style={{ marginTop: 'var(--space-4)' }}>
             <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 'var(--space-3)', letterSpacing: '0.04em' }}>
-              اقتراحات للبدء
+              اقتراحات للإضافة
             </p>
-            {remainingSuggestions.length > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-                {remainingSuggestions.map(name => (
-                  <button
-                    key={name}
-                    type="button"
-                    style={suggestionChipStyle}
-                    onClick={() => handleAddNew(name)}
-                  >
-                    + {name}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-tertiary)', margin: 0 }}>
-                كل الاقتراحات انضافت
-              </p>
-            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+              {remainingSuggestions.map(name => (
+                <button
+                  key={name}
+                  type="button"
+                  style={suggestionChipStyle}
+                  onClick={() => handleAddNew(name)}
+                >
+                  + {name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -529,8 +525,8 @@ export function SectionDetail() {
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
-        title="حذف العنصر"
-        message={`هل تريد حذف "${deleteTargetItem?.name ?? 'هذا العنصر'}"؟`}
+        title="حذف البند"
+        message={`هل تريد حذف "${deleteTargetItem?.name ?? 'هذا البند'}"؟`}
         confirmText="حذف"
         cancelText="إلغاء"
         variant="danger"
@@ -648,6 +644,37 @@ function filterTabStyle(active: boolean): React.CSSProperties {
     flexShrink: 0,
   };
 }
+
+const emptyInviteStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+  gap: 'var(--space-2)',
+  padding: 'var(--space-8) var(--space-4) var(--space-4)',
+};
+
+const emptyInviteTitleStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-md)',
+  fontWeight: 700,
+  color: 'var(--text-primary)',
+  margin: 0,
+};
+
+const emptyInviteTextStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-sm)',
+  color: 'var(--text-tertiary)',
+  margin: 0,
+  lineHeight: 1.6,
+};
+
+const emptyChipsRowStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 'var(--space-2)',
+  justifyContent: 'center',
+  marginTop: 'var(--space-2)',
+};
 
 const suggestionChipStyle: React.CSSProperties = {
   display: 'inline-flex',

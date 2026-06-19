@@ -88,6 +88,27 @@ export function getDaysLabel(days: number): string {
   return `بعد ${days} يومًا`;
 }
 
+export type CountdownTone = 'normal' | 'soon' | 'today' | 'past' | 'none';
+
+export interface WeddingCountdown {
+  /** Context label for the card heading (e.g. "موعد الزواج", "موعدكم يقترب"). */
+  label: string;
+  /** Hero value shown once (e.g. "165", "اليوم", "تم", "—"). */
+  value: string;
+  /** Short supporting line — never repeats the label's meaning. */
+  sub: string;
+  tone: CountdownTone;
+}
+
+/** Countdown display for the wedding day — the number is the hero, no repetition. */
+export function getWeddingCountdown(days: number | null): WeddingCountdown {
+  if (days === null) return { label: 'موعد الزواج', value: '—', sub: 'حدّد التاريخ', tone: 'none' };
+  if (days < 0) return { label: 'تم الزواج', value: 'تم', sub: 'الله يتمم لكم بالخير', tone: 'past' };
+  if (days === 0) return { label: 'موعد الزواج', value: 'اليوم', sub: 'الله يتمم لكم بالخير', tone: 'today' };
+  if (days <= 30) return { label: 'موعدكم يقترب', value: String(days), sub: 'يوم متبقّي', tone: 'soon' };
+  return { label: 'موعد الزواج', value: String(days), sub: 'يوم متبقّي', tone: 'normal' };
+}
+
 export function maskAmount(amount: number, hide: boolean): string {
   return hide ? '••••' : formatCurrency(amount);
 }

@@ -102,13 +102,15 @@ export function SectionCard({ category, expenses, onClick, hideAmounts = false }
               {BUDGET_STATUS_LABELS[budgetStatus]}
             </span>
           )}
-          <span style={{
-            fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)',
-            background: 'var(--bg-secondary)', padding: '2px 8px',
-            borderRadius: 'var(--radius-full)', fontWeight: 600, whiteSpace: 'nowrap',
-          }}>
-            {totals.count > 0 ? `${totals.count} عناصر` : 'فارغ'}
-          </span>
+          {totals.count > 0 && (
+            <span style={{
+              fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)',
+              background: 'var(--bg-secondary)', padding: '2px 8px',
+              borderRadius: 'var(--radius-full)', fontWeight: 600, whiteSpace: 'nowrap',
+            }}>
+              {totals.count} عناصر
+            </span>
+          )}
           {allPaid ? (
             <div style={{
               width: '24px', height: '24px', borderRadius: 'var(--radius-full)',

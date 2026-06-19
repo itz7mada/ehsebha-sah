@@ -2,26 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
-import { PlusIcon, CheckIcon } from '../common/Icons';
+import { PlusIcon } from '../common/Icons';
 import { useApp } from '../../context/AppContext';
+import { useToast } from '../common/Toast';
 import * as db from '../../db/database';
 import { formatCurrency, generateId, now, parseCurrencyInput } from '../../utils/formatting';
 import { isPositiveAmount, AMOUNT_POSITIVE_ERROR, getTodayDateInputValue } from '../../utils/validation';
+import { deriveExpenseStatus } from '../../utils/calculations';
 import type { ExpenseItem } from '../../types';
 
-type ItemStatus = 'paid' | 'partial' | 'planned';
-
-const STATUS_OPTIONS: { key: ItemStatus; label: string; hint: string; dot: string }[] = [
-  { key: 'paid',    label: 'تم الدفع',     hint: 'سدّدت كامل المبلغ',     dot: 'var(--success)' },
-  { key: 'partial', label: 'دفعة جزئية',   hint: 'دفعت جزء وباقي عليك',  dot: 'var(--warning)' },
-  { key: 'planned', label: 'مخطط له',      hint: 'بعدك ما دفعت',          dot: 'var(--text-tertiary)' },
-];
-
-const AMOUNT_LABELS: Record<ItemStatus, string> = {
-  paid: 'المبلغ المدفوع',
-  partial: 'كم دفعت؟',
-  planned: 'المبلغ المتوقع',
-};
+// The user answers one question — "شو صار؟" — and the app infers the status.
+type PayMode = 'paid' | 'later';
 
 const MAX_IMAGES = 3;
 
@@ -49,14 +40,17 @@ interface AddPaymentSheetProps {
   isOpen: boolean;
   onClose: () => void;
   item: ExpenseItem | null;
+  /** Which mode to open in. Quick Add opens on 'paid'. Defaults to 'paid'. */
+  initialMode?: PayMode;
 }
 
-export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps) {
+export function AddPaymentSheet({ isOpen, onClose, item, initialMode }: AddPaymentSheetProps) {
   const { dispatch } = useApp();
+  const { show } = useToast();
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  const [mode, setMode] = useState<PayMode>('paid');
   const [amountRaw, setAmountRaw] = useState('');
-  const [status, setStatus] = useState<ItemStatus>('planned');
   const [dueDate, setDueDate] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
@@ -65,38 +59,36 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Prefill the amount field for a given mode (paid total vs expected).
+  function prefillFor(it: ExpenseItem, m: PayMode): string {
+    if (m === 'later') return it.expectedAmount > 0 ? String(it.expectedAmount) : '';
+    // 'paid': base on the existing total if any, else the planned cost (fast "paid in full").
+    if (it.paidAmount > 0) return String(it.paidAmount);
+    return it.expectedAmount > 0 ? String(it.expectedAmount) : '';
+  }
+
   useEffect(() => {
     if (!isOpen || !item) return;
     setErrors({});
-    const initialStatus: ItemStatus =
-      item.status === 'paid' ? 'paid' : item.status === 'partial' ? 'partial' : 'planned';
-    setStatus(initialStatus);
-    if (initialStatus === 'planned') {
-      setAmountRaw(item.expectedAmount > 0 ? String(item.expectedAmount) : '');
-    } else {
-      setAmountRaw(item.paidAmount > 0 ? String(item.paidAmount) : '');
-    }
-    setDueDate(item.dueDate ?? '');
+    const startMode: PayMode = initialMode ?? 'paid';
+    setMode(startMode);
+    setAmountRaw(prefillFor(item, startMode));
+    setDueDate(item.dueDate ?? (startMode === 'paid' ? getTodayDateInputValue() : ''));
     const existingImages = item.images ?? (item.imageData ? [item.imageData] : []);
     setImages(existingImages);
     setShowImages(existingImages.length > 0);
     setNotes(item.notes ?? '');
     setShowNotes(!!item.notes);
-  }, [isOpen, item]);
+  }, [isOpen, item, initialMode]);
 
   const amount = parseCurrencyInput(amountRaw);
 
-  function handleStatusChange(next: ItemStatus) {
-    setStatus(next);
-    // Helpful prefills: "paid" pre-loads the planned amount; "planned" shows the planned amount.
-    if ((next === 'paid' && !amountRaw && item?.expectedAmount) || (next === 'planned' && !amountRaw && item?.expectedAmount)) {
-      setAmountRaw(String(item.expectedAmount));
-    }
-    // Paid/partial default the date to today; planned keeps it optional.
-    if ((next === 'paid' || next === 'partial') && !dueDate) {
-      setDueDate(getTodayDateInputValue());
-    }
-    if (errors.amount) setErrors({});
+  function handleModeChange(next: PayMode) {
+    if (next === mode || !item) return;
+    setMode(next);
+    setAmountRaw(prefillFor(item, next));
+    if (next === 'paid' && !dueDate) setDueDate(getTodayDateInputValue());
+    setErrors({});
   }
 
   const validate = (): boolean => {
@@ -136,18 +128,22 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
     if (!item || !validate()) return;
     setSaving(true);
     try {
-      const paidAmount = status === 'paid' ? amount : status === 'partial' ? amount : 0;
-      const nextStatus = status === 'paid' ? 'paid' as const
-        : status === 'partial' ? 'partial' as const
-        : 'unpaid' as const;
-      // "مخطط له" lets the user set/adjust the planned cost of the item.
-      const expectedAmount = status === 'planned' ? amount : item.expectedAmount;
+      let paidAmount: number;
+      let expectedAmount: number;
+      if (mode === 'paid') {
+        paidAmount = amount;                                   // "كم دفعت؟" = total paid on the item
+        expectedAmount = item.expectedAmount > 0 ? item.expectedAmount : amount; // record a plan if none existed
+      } else {
+        paidAmount = item.paidAmount;                          // "بدفعه لاحقاً" never resets an existing payment
+        expectedAmount = amount;                               // "المبلغ المتوقع"
+      }
+      const status = deriveExpenseStatus(paidAmount, expectedAmount);
 
       const updated: ExpenseItem = {
         ...item,
         expectedAmount,
         paidAmount,
-        status: nextStatus,
+        status,
         dueDate: dueDate || undefined,
         images,
         imageData: undefined,
@@ -158,7 +154,8 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
       await db.saveExpense(updated);
       dispatch({ type: 'UPSERT_EXPENSE', payload: updated });
 
-      if (paidAmount > 0 && paidAmount !== item.paidAmount) {
+      // Log a journey event only when an actual payment was recorded/changed.
+      if (mode === 'paid' && paidAmount > 0 && paidAmount !== item.paidAmount) {
         const payEvent = {
           id: generateId(),
           type: 'payment_made' as const,
@@ -172,6 +169,7 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
         dispatch({ type: 'ADD_JOURNEY', payload: payEvent });
       }
 
+      show('تم الحفظ ✓');
       onClose();
     } catch (err) {
       console.error('Failed to save payment:', err);
@@ -181,6 +179,9 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
   }
 
   const canSave = isPositiveAmount(amount);
+  const paidHint = mode === 'paid' && item && item.paidAmount > 0
+    ? `دفعت سابقاً: ${formatCurrency(item.paidAmount)} — اكتب الإجمالي بعد الدفعة`
+    : undefined;
 
   if (!item) return null;
 
@@ -207,53 +208,41 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
         {/* Item name context */}
         <p style={itemNameStyle}>{item.name}</p>
 
-        {/* Status — the one decision the user makes */}
+        {/* The one question */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={questionStyle}>ما حالة هذا البند؟</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-            {STATUS_OPTIONS.map(opt => {
-              const active = status === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => handleStatusChange(opt.key)}
-                  style={statusCardStyle(active)}
-                  aria-pressed={active}
-                >
-                  <span style={{ ...dotStyle, background: opt.dot }} aria-hidden="true" />
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={statusLabelStyle(active)}>{opt.label}</span>
-                    <span style={statusHintStyle}>{opt.hint}</span>
-                  </span>
-                  {active && <CheckIcon size={18} color="var(--accent)" />}
-                </button>
-              );
-            })}
+          <span style={questionStyle}>شو صار؟</span>
+          <div style={segStyle}>
+            <button type="button" style={segBtnStyle(mode === 'paid')} onClick={() => handleModeChange('paid')} aria-pressed={mode === 'paid'}>
+              دفعت مبلغ
+            </button>
+            <button type="button" style={segBtnStyle(mode === 'later')} onClick={() => handleModeChange('later')} aria-pressed={mode === 'later'}>
+              بدفعه لاحقاً
+            </button>
           </div>
         </div>
 
-        {/* Amount */}
+        {/* Amount — meaning depends on the mode */}
         <Input
-          label={AMOUNT_LABELS[status]}
+          label={mode === 'paid' ? 'كم دفعت؟' : 'المبلغ المتوقع'}
           value={amountRaw}
-          onChange={setAmountRaw}
+          onChange={(v) => { setAmountRaw(v); if (errors.amount) setErrors({}); }}
           type="number"
           placeholder="0"
           prefix="د.إ"
           error={errors.amount}
+          hint={paidHint}
         />
 
         {/* Date */}
         <Input
-          label={status === 'planned' ? 'موعد الدفع (اختياري)' : 'تاريخ الدفع'}
+          label={mode === 'paid' ? 'متى دفعت؟' : 'موعد الدفع (اختياري)'}
           value={dueDate}
           onChange={setDueDate}
           type="date"
         />
 
-        {/* Optional extras — hidden behind small actions */}
-        {(!showImages || !showNotes) && (
+        {/* Optional extras — only when recording a payment, hidden behind small actions */}
+        {mode === 'paid' && (!showImages || !showNotes) && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
             {!showImages && (
               <button type="button" style={ghostBtnStyle} onClick={openImages}>
@@ -271,7 +260,7 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
         )}
 
         {/* Images (revealed) */}
-        {showImages && (
+        {mode === 'paid' && showImages && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <span style={labelStyle}>إرفاق فاتورة أو صورة</span>
             {images.length > 0 && (
@@ -330,7 +319,7 @@ export function AddPaymentSheet({ isOpen, onClose, item }: AddPaymentSheetProps)
         />
 
         {/* Notes (revealed) */}
-        {showNotes && (
+        {mode === 'paid' && showNotes && (
           <Input
             label="ملاحظة"
             value={notes}
@@ -368,49 +357,28 @@ const questionStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
 };
 
-function statusCardStyle(active: boolean): React.CSSProperties {
+const segStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: 'var(--space-2)',
+};
+
+function segBtnStyle(active: boolean): React.CSSProperties {
   return {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--space-3)',
-    padding: 'var(--space-3) var(--space-4)',
-    minHeight: '52px',
+    padding: 'var(--space-3) var(--space-2)',
+    minHeight: '48px',
     borderRadius: 'var(--radius-lg)',
     border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
     background: active ? 'var(--accent-light)' : 'var(--bg-card)',
+    color: active ? 'var(--accent)' : 'var(--text-secondary)',
     cursor: 'pointer',
     fontFamily: 'var(--font-family)',
-    textAlign: 'start',
-    width: '100%',
+    fontSize: 'var(--font-size-base)',
+    fontWeight: active ? 800 : 600,
     transition: 'all var(--transition-fast)',
     WebkitTapHighlightColor: 'transparent',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
   };
 }
-
-const dotStyle: React.CSSProperties = {
-  width: '12px',
-  height: '12px',
-  borderRadius: '50%',
-  flexShrink: 0,
-};
-
-function statusLabelStyle(active: boolean): React.CSSProperties {
-  return {
-    display: 'block',
-    fontSize: 'var(--font-size-base)',
-    fontWeight: 700,
-    color: active ? 'var(--accent)' : 'var(--text-primary)',
-  };
-}
-
-const statusHintStyle: React.CSSProperties = {
-  display: 'block',
-  margin: '2px 0 0',
-  fontSize: 'var(--font-size-xs)',
-  color: 'var(--text-tertiary)',
-  lineHeight: 1.4,
-};
 
 const ghostBtnStyle: React.CSSProperties = {
   display: 'inline-flex',

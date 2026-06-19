@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { BottomSheet } from '../common/BottomSheet';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
+import { PlusIcon } from '../common/Icons';
 import { useApp } from '../../context/AppContext';
+import { useToast } from '../common/Toast';
 import * as db from '../../db/database';
 import { generateId, now, parseCurrencyInput } from '../../utils/formatting';
 import { isOptionalPositiveAmount, AMOUNT_POSITIVE_ERROR } from '../../utils/validation';
+import { deriveExpenseStatus } from '../../utils/calculations';
 import type { ExpenseItem } from '../../types';
 
 interface AddExpenseSheetProps {
@@ -18,10 +21,12 @@ interface AddExpenseSheetProps {
 
 export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, defaultName }: AddExpenseSheetProps) {
   const { state, dispatch } = useApp();
+  const { show } = useToast();
 
   const [name, setName] = useState('');
   const [amountRaw, setAmountRaw] = useState('');
   const [notes, setNotes] = useState('');
+  const [showNotes, setShowNotes] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -32,10 +37,12 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
       setName(editItem.name);
       setAmountRaw(editItem.expectedAmount > 0 ? String(editItem.expectedAmount) : '');
       setNotes(editItem.notes ?? '');
+      setShowNotes(!!editItem.notes);
     } else {
       setName(defaultName ?? '');
       setAmountRaw('');
       setNotes('');
+      setShowNotes(false);
     }
   }, [isOpen, editItem, defaultName]);
 
@@ -43,7 +50,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'أدخل اسم العنصر';
+    if (!name.trim()) errs.name = 'أدخل اسم البند';
     // Planned amount is optional, but a typed value must be > 0.
     if (!isOptionalPositiveAmount(amountRaw)) errs.amount = AMOUNT_POSITIVE_ERROR;
     setErrors(errs);
@@ -60,9 +67,9 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
         categoryId,
         name: name.trim(),
         expectedAmount: amount,
-        // Preserve existing payment data (only AddPaymentSheet changes these)
+        // Preserve the payment, but keep status consistent with the numbers.
         paidAmount: editItem?.paidAmount ?? 0,
-        status: editItem?.status ?? 'unpaid',
+        status: deriveExpenseStatus(editItem?.paidAmount ?? 0, amount),
         dueDate: editItem?.dueDate,
         notes: notes.trim() || undefined,
         imageData: editItem?.imageData,
@@ -90,6 +97,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
         dispatch({ type: 'ADD_JOURNEY', payload: addEvent });
       }
 
+      show('تم الحفظ ✓');
       onClose();
     } catch (err) {
       console.error('Failed to save expense:', err);
@@ -104,7 +112,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title={editItem ? 'تعديل العنصر' : 'إضافة عنصر'}
+      title={editItem ? 'تعديل بند' : 'إضافة بند'}
       footer={
         <Button
           variant="primary"
@@ -114,7 +122,7 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
           disabled={!canSave || saving}
           onClick={handleSave}
         >
-          {editItem ? 'تحديث العنصر' : 'إضافة العنصر'}
+          {editItem ? 'حفظ' : 'إضافة بند'}
         </Button>
       }
     >
@@ -122,12 +130,12 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
 
         {!editItem && (
           <p style={subtitleStyle}>
-            اكتب اسم العنصر، والمبلغ اختياري.
+            اكتب اسم البند، والمبلغ اختياري.
           </p>
         )}
 
         <Input
-          label="اسم العنصر"
+          label="اسم البند"
           value={name}
           onChange={setName}
           placeholder="مثال: التصوير أو القاعة"
@@ -145,14 +153,26 @@ export function AddExpenseSheet({ isOpen, onClose, editItem, defaultCategoryId, 
           error={errors.amount}
         />
 
-        <Input
-          label="ملاحظة (اختياري)"
-          value={notes}
-          onChange={setNotes}
-          placeholder="أي تفاصيل بسيطة تبي تتذكرها لاحقاً"
-          multiline
-          rows={2}
-        />
+        {!showNotes && (
+          <div>
+            <button type="button" style={ghostBtnStyle} onClick={() => setShowNotes(true)}>
+              <PlusIcon size={15} color="var(--text-secondary)" />
+              <span>إضافة ملاحظة</span>
+            </button>
+          </div>
+        )}
+
+        {showNotes && (
+          <Input
+            label="ملاحظة"
+            value={notes}
+            onChange={setNotes}
+            placeholder="أي تفاصيل بسيطة تبي تتذكرها لاحقاً"
+            multiline
+            rows={2}
+            autoFocus
+          />
+        )}
 
       </div>
     </BottomSheet>
@@ -164,6 +184,22 @@ const subtitleStyle: React.CSSProperties = {
   color: 'var(--text-tertiary)',
   margin: 0,
   lineHeight: 1.6,
+};
+
+const ghostBtnStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '9px 14px',
+  borderRadius: 'var(--radius-full)',
+  border: '1px solid var(--border)',
+  background: 'var(--bg-secondary)',
+  color: 'var(--text-secondary)',
+  cursor: 'pointer',
+  fontSize: 'var(--font-size-sm)',
+  fontWeight: 600,
+  fontFamily: 'var(--font-family)',
+  WebkitTapHighlightColor: 'transparent',
 };
 
 export default AddExpenseSheet;

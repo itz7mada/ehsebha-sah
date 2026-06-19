@@ -1,11 +1,13 @@
 import React from 'react';
 import type { BudgetStats } from '../../types';
-import { EyeIcon, EyeOffIcon } from '../common/Icons';
+import { EyeIcon, EyeOffIcon, PlusIcon } from '../common/Icons';
 
 interface BudgetHeroProps {
   stats: BudgetStats;
   hideAmounts: boolean;
   onToggleHide: () => void;
+  /** Optional calm quick-add action rendered inside the card footer. */
+  onQuickAdd?: () => void;
 }
 
 const STATUS_CONFIG = {
@@ -15,7 +17,7 @@ const STATUS_CONFIG = {
   exceeded:    { label: 'تجاوز الميزانية',  color: 'var(--danger)',  bg: 'var(--danger-light)'  },
 };
 
-export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps) {
+export function BudgetHero({ stats, hideAmounts, onToggleHide, onQuickAdd }: BudgetHeroProps) {
   const isOverBudget = stats.remaining < 0;
   const pct = Math.min(Math.max(stats.spentPercentage, 0), 100);
   const status = STATUS_CONFIG[stats.comfortLevel];
@@ -38,19 +40,27 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
       <div style={topBarStyle} aria-hidden="true" />
 
       <div style={contentStyle}>
-        {/* Row 1: overview label + privacy eye */}
+        {/* Row 1: overview label + quiet quick action + privacy eye */}
         <div style={headerRowStyle}>
           <span style={overviewLabelStyle}>نظرة الميزانية</span>
-          <button
-            type="button"
-            onClick={onToggleHide}
-            style={eyeBtnStyle}
-            aria-label={hideAmounts ? 'إظهار المبالغ' : 'إخفاء المبالغ'}
-          >
-            {hideAmounts
-              ? <EyeOffIcon size={18} color="var(--text-tertiary)" />
-              : <EyeIcon size={18} color="var(--text-tertiary)" />}
-          </button>
+          <div style={headerActionsStyle}>
+            {onQuickAdd && (
+              <button type="button" onClick={onQuickAdd} style={quickAddBtnStyle} aria-label="إضافة سريعة">
+                <PlusIcon size={15} color="var(--accent)" />
+                <span>إضافة سريعة</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onToggleHide}
+              style={eyeBtnStyle}
+              aria-label={hideAmounts ? 'إظهار المبالغ' : 'إخفاء المبالغ'}
+            >
+              {hideAmounts
+                ? <EyeOffIcon size={18} color="var(--text-tertiary)" />
+                : <EyeIcon size={18} color="var(--text-tertiary)" />}
+            </button>
+          </div>
         </div>
 
         {/* Amount block — label above the number, pill on the same row */}
@@ -65,14 +75,17 @@ export function BudgetHero({ stats, hideAmounts, onToggleHide }: BudgetHeroProps
             </span>
           </div>
 
-          {hideAmounts ? (
-            <span className="num" style={{ ...bigNumberStyle, color: amountColor }}>••••</span>
-          ) : (
-            <div style={amountRowStyle}>
-              <span className="num" style={{ ...bigNumberStyle, color: amountColor }}>{remainingDigits}</span>
-              <span style={currencyUnitStyle}>د.إ</span>
-            </div>
-          )}
+          {/* Fixed wrapper so toggling the eye never shifts the amount's position */}
+          <div style={amountRowStyle}>
+            {hideAmounts ? (
+              <span className="num" style={{ ...bigNumberStyle, color: amountColor }}>••••</span>
+            ) : (
+              <>
+                <span className="num" style={{ ...bigNumberStyle, color: amountColor }}>{remainingDigits}</span>
+                <span style={currencyUnitStyle}>د.إ</span>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Divider */}
@@ -280,6 +293,29 @@ const progressMetaStyle: React.CSSProperties = {
 const progressMetaStrong: React.CSSProperties = {
   fontWeight: 700,
   color: 'var(--text-secondary)',
+};
+
+const headerActionsStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2px',
+};
+
+// Small, quiet text button in the card header — clearly an action, never a CTA.
+const quickAddBtnStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '4px',
+  padding: '6px 8px',
+  background: 'none',
+  border: 'none',
+  color: 'var(--accent)',
+  fontSize: 'var(--font-size-sm)',
+  fontWeight: 700,
+  fontFamily: 'var(--font-family)',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  WebkitTapHighlightColor: 'transparent',
 };
 
 export default BudgetHero;

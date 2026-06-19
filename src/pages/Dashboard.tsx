@@ -8,11 +8,17 @@ import { BottomSheet } from '../components/common/BottomSheet';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { PlusIcon, ShareIcon, CalendarIcon, CheckIcon, HeartIcon, AlertIcon } from '../components/common/Icons';
-import { getDaysLabel, maskAmount, parseCurrencyInput, formatCurrency, now, generateId, normalizeDigits } from '../utils/formatting';
+import { QuickAddSheet } from '../components/quickadd/QuickAddSheet';
+import { AddPaymentSheet } from '../components/expenses/AddPaymentSheet';
+import { AddExpenseSheet } from '../components/expenses/AddExpenseSheet';
+import { EditBudgetSheet } from '../components/common/EditBudgetSheet';
+import { AddSupportSheet } from '../components/support/AddSupportSheet';
+import { useToast } from '../components/common/Toast';
+import { getWeddingCountdown, maskAmount, parseCurrencyInput, formatCurrency, now, generateId, normalizeDigits } from '../utils/formatting';
 import { isOptionalPositiveAmount, AMOUNT_POSITIVE_ERROR } from '../utils/validation';
 import * as db from '../db/database';
 import { roleTagline } from '../types';
-import type { Category } from '../types';
+import type { Category, ExpenseItem } from '../types';
 
 const CAT_COLORS = [
   '#C99368', // warm gold
@@ -31,6 +37,7 @@ type ReserveMode = 'from_budget' | 'extra';
 export default function Dashboard() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
+  const { show } = useToast();
   const { settings, stats, expenses, categories } = state;
 
   const [showAddCatSheet, setShowAddCatSheet] = useState(false);
@@ -45,6 +52,14 @@ export default function Dashboard() {
   );
 
   const [showShareSheet, setShowShareSheet] = useState(false);
+
+  // Quick Add flow state
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [paymentItem, setPaymentItem] = useState<ExpenseItem | null>(null);
+  const [addItemCategoryId, setAddItemCategoryId] = useState<string | undefined>(undefined);
+  const [showAddItemSheet, setShowAddItemSheet] = useState(false);
+  const [showEditBudget, setShowEditBudget] = useState(false);
+  const [showAddSupport, setShowAddSupport] = useState(false);
 
   // Emergency reserve sheet state
   const [showReserveSheet, setShowReserveSheet] = useState(false);
@@ -78,6 +93,7 @@ export default function Dashboard() {
       };
       await db.saveCategory(cat);
       dispatch({ type: 'SET_CATEGORIES', payload: [...categories, cat] });
+      show('تم الحفظ ✓');
       setShowAddCatSheet(false);
     } catch (err) {
       console.error('Failed to save category:', err);
@@ -170,6 +186,7 @@ export default function Dashboard() {
   }
 
   const daysRemaining = stats.daysRemaining;
+  const countdown = getWeddingCountdown(daysRemaining);
   const emergencyReserve = stats.emergencyReserve;
 
   return (
@@ -190,34 +207,35 @@ export default function Dashboard() {
             type="button"
             style={shareButtonStyle}
             onClick={() => setShowShareSheet(true)}
-            aria-label="شارك خطتك"
+            aria-label="شارك ملخص خطتك"
           >
             <ShareIcon size={16} color="var(--accent)" />
             <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)' }}>شارك</span>
           </button>
         </header>
 
-        {/* Main budget card */}
+        {/* Main budget card — Quick Add lives quietly in its footer */}
         <BudgetHero
           stats={stats}
           hideAmounts={hideAmounts}
           onToggleHide={toggleHideAmounts}
+          onQuickAdd={() => setShowQuickAdd(true)}
         />
 
         {/* 2 secondary mini cards — tap to go to journey */}
         <div style={miniGridStyle}>
           <MiniCard
-            label="باقي على الزواج"
-            value={daysRemaining !== null ? String(Math.abs(daysRemaining)) : '—'}
-            sub={daysRemaining !== null ? getDaysLabel(daysRemaining) : 'لم تُحدَّد التاريخ'}
+            label={countdown.label}
+            value={countdown.value}
+            sub={countdown.sub}
             icon={<CalendarIcon size={15} color="var(--accent)" />}
             iconBg="var(--accent-light)"
             onClick={() => navigate('/journey')}
           />
           <MiniCard
             label="إنجاز الخطة"
-            value={totalItems > 0 ? `${paidItems}/${totalItems}` : '—'}
-            sub={totalItems > 0 ? 'بند مدفوع' : 'لا توجد بنود'}
+            value={totalItems > 0 ? `${Math.round((paidItems / totalItems) * 100)}%` : '—'}
+            sub={totalItems > 0 ? `${paidItems} من ${totalItems} بنود` : 'ابدأ بأول بند'}
             icon={<CheckIcon size={15} color="var(--success)" />}
             iconBg="var(--success-light)"
             onClick={() => navigate('/journey')}
@@ -238,11 +256,9 @@ export default function Dashboard() {
                 <span className="num" style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--success)', lineHeight: 1.05 }}>
                   {maskAmount(supportReceived, hideAmounts)}
                 </span>
-                {supportExpected > 0 && (
-                  <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                    {maskAmount(supportExpected, hideAmounts)} متوقعة
-                  </span>
-                )}
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                  {supportExpected > 0 ? `${maskAmount(supportExpected, hideAmounts)} متوقعة` : 'مستلمة'}
+                </span>
               </>
             ) : (
               <>
@@ -273,9 +289,9 @@ export default function Dashboard() {
             ) : (
               <>
                 <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.4 }}>
-                  لم يُحدَّد بعد
+                  مبلغ للمفاجآت غير المتوقعة
                 </span>
-                <span style={infoCardActionStyle}>تحديد ›</span>
+                <span style={infoCardActionStyle}>حدّد الآن ›</span>
               </>
             )}
           </button>
@@ -299,9 +315,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Add button */}
+        {/* Add main category — secondary action (single primary per screen) */}
         <Button
-          variant="primary"
+          variant="secondary"
           size="xl"
           fullWidth
           onClick={() => { setNewCatName(''); setNewCatBudgetRaw(''); setNewCatNameErr(''); setNewCatBudgetErr(''); setNewCatColor(CAT_COLORS[activeCategories.length % CAT_COLORS.length]); setShowAddCatSheet(true); }}
@@ -535,6 +551,29 @@ export default function Dashboard() {
           expenses={expenses}
         />
       )}
+
+      {/* Quick Add flow + delegated entry sheets (one sheet open at a time) */}
+      <QuickAddSheet
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+        onRecordPayment={(item) => { setShowQuickAdd(false); setPaymentItem(item); }}
+        onAddItem={(catId) => { setShowQuickAdd(false); setAddItemCategoryId(catId); setShowAddItemSheet(true); }}
+        onAddSupport={() => { setShowQuickAdd(false); setShowAddSupport(true); }}
+        onEditBudget={() => { setShowQuickAdd(false); setShowEditBudget(true); }}
+      />
+      <AddPaymentSheet
+        isOpen={!!paymentItem}
+        onClose={() => setPaymentItem(null)}
+        item={paymentItem}
+        initialMode="paid"
+      />
+      <AddExpenseSheet
+        isOpen={showAddItemSheet}
+        onClose={() => setShowAddItemSheet(false)}
+        defaultCategoryId={addItemCategoryId}
+      />
+      <EditBudgetSheet isOpen={showEditBudget} onClose={() => setShowEditBudget(false)} />
+      <AddSupportSheet isOpen={showAddSupport} onClose={() => setShowAddSupport(false)} />
     </div>
   );
 }
@@ -623,6 +662,9 @@ const metricSubStyle: React.CSSProperties = {
 const pageStyle: React.CSSProperties = {
   minHeight: '100dvh',
   background: 'var(--bg-primary)',
+  backgroundImage: 'radial-gradient(130% 50% at 50% 0%, rgba(201,147,104,0.13), transparent 58%)',
+  backgroundRepeat: 'no-repeat',
+  backgroundAttachment: 'fixed',
 };
 
 const contentStyle: React.CSSProperties = {
@@ -665,13 +707,15 @@ const titleStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
   margin: 0,
   lineHeight: 1.2,
+  letterSpacing: '-0.01em',
 };
 
 const subtitleStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-  margin: 0,
-  fontWeight: 400,
+  color: 'var(--text-secondary)',
+  margin: '4px 0 0',
+  fontWeight: 500,
+  lineHeight: 1.5,
 };
 
 const miniGridStyle: React.CSSProperties = {

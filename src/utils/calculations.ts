@@ -1,5 +1,19 @@
-import type { ExpenseItem, SupportItem, Settings, BudgetStats } from '../types';
+import type { ExpenseItem, SupportItem, Settings, BudgetStats, PaymentStatus } from '../types';
 import { getDaysRemaining } from './formatting';
+
+/**
+ * Single source of truth for an item's status — derived purely from its numbers.
+ * The user never picks the status manually; it is inferred on every write.
+ *   paid <= 0           → unpaid
+ *   expected <= 0       → paid    (paid something with no planned cost = complete)
+ *   paid >= expected    → paid
+ *   otherwise           → partial
+ */
+export function deriveExpenseStatus(paidAmount: number, expectedAmount: number): PaymentStatus {
+  if (paidAmount <= 0) return 'unpaid';
+  if (expectedAmount <= 0) return 'paid';
+  return paidAmount >= expectedAmount ? 'paid' : 'partial';
+}
 
 export function calculateBudgetStats(
   settings: Settings,
