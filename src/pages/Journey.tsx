@@ -1,12 +1,16 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency, getWeddingCountdown } from '../utils/formatting';
-import { CalendarIcon } from '../components/common/Icons';
+import { WalletIcon, GridIcon, PlusIcon, CheckIcon, HeartIcon, CalendarIcon, ClockIcon } from '../components/common/Icons';
+
+type IconCmp = (props: { size: number; color: string }) => React.ReactElement;
+type NodeState = 'done' | 'next' | 'pending';
 
 interface Milestone {
   title: string;
   detail?: string;
   done: boolean;
+  Icon: IconCmp;
 }
 
 export default function Journey() {
@@ -23,20 +27,21 @@ export default function Journey() {
 
   // Milestones derived purely from the user's current data — they fill in as the plan grows.
   const milestones: Milestone[] = [
-    { title: 'بدأت التخطيط', done: !!settings?.setupComplete },
-    { title: 'حدّدت الميزانية', done: budget > 0, detail: budget > 0 ? formatCurrency(budget) : undefined },
-    { title: 'رتّبت أقسام الخطة', done: activeCats.length > 0, detail: activeCats.length > 0 ? `${activeCats.length} أقسام` : undefined },
-    { title: 'أضفت أول بند', done: expenses.length > 0, detail: expenses.length > 0 ? `${expenses.length} بند` : undefined },
-    { title: 'سجّلت أول دفعة', done: totalPaid > 0, detail: totalPaid > 0 ? `دفعت ${formatCurrency(totalPaid)}` : undefined },
-    { title: 'أضفت مساهمة', done: totalSupport > 0, detail: totalSupport > 0 ? formatCurrency(totalSupport) : undefined },
+    { title: 'بدأت التخطيط', done: !!settings?.setupComplete, Icon: ClockIcon },
+    { title: 'حدّدت الميزانية', done: budget > 0, detail: budget > 0 ? formatCurrency(budget) : undefined, Icon: WalletIcon },
+    { title: 'رتّبت أقسام الخطة', done: activeCats.length > 0, detail: activeCats.length > 0 ? `${activeCats.length} أقسام` : undefined, Icon: GridIcon },
+    { title: 'أضفت أول بند', done: expenses.length > 0, detail: expenses.length > 0 ? `${expenses.length} بند` : undefined, Icon: PlusIcon },
+    { title: 'سجّلت أول دفعة', done: totalPaid > 0, detail: totalPaid > 0 ? `دفعت ${formatCurrency(totalPaid)}` : undefined, Icon: CheckIcon },
+    { title: 'أضفت مساهمة', done: totalSupport > 0, detail: totalSupport > 0 ? formatCurrency(totalSupport) : undefined, Icon: HeartIcon },
   ];
 
-  const nextIndex = milestones.findIndex(m => !m.done);
   const doneCount = milestones.filter(m => m.done).length;
+  const nextIndex = milestones.findIndex(m => !m.done);
+  const progress = Math.round((doneCount / milestones.length) * 100);
 
   return (
     <div style={{ flex: 1, background: 'var(--bg-primary)' }} className="animate-fade-in">
-      <div style={headerStyle}>
+      <div style={pageHeaderStyle}>
         <h1 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
           رحلتي
         </h1>
@@ -46,6 +51,25 @@ export default function Journey() {
       </div>
 
       <div style={contentStyle}>
+
+        {/* Hero — countdown + overall journey progress */}
+        <div style={heroStyle}>
+          <div style={heroGlowStyle} aria-hidden="true" />
+          <div style={heroTopBarStyle} aria-hidden="true" />
+          <span style={heroLabelStyle}>الطريق إلى يوم الزواج</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', direction: 'rtl' }}>
+            <span className="num" style={heroNumberStyle}>{countdown.value}</span>
+            <span style={heroSubStyle}>{countdown.sub}</span>
+          </div>
+          <div style={heroTrackStyle}>
+            <div style={{ ...heroFillStyle, width: `${progress}%` }} />
+          </div>
+          <span style={heroProgressLabelStyle}>
+            أنجزت <span className="num" style={{ fontWeight: 800, color: 'var(--accent)' }}>{doneCount}</span> من {milestones.length} خطوات
+          </span>
+        </div>
+
+        {/* Milestone timeline */}
         <div style={timelineStyle}>
           {milestones.map((m, i) => (
             <MilestoneRow key={m.title} milestone={m} isNext={i === nextIndex} />
@@ -54,13 +78,13 @@ export default function Journey() {
           {/* Destination — the wedding day */}
           <div style={rowStyle}>
             <div style={railStyle}>
-              <div style={destDotStyle} aria-hidden="true">
-                <CalendarIcon size={15} color="var(--text-inverse)" />
+              <div style={destIconStyle} aria-hidden="true">
+                <CalendarIcon size={17} color="var(--text-inverse)" />
               </div>
             </div>
             <div style={destCardStyle}>
               <span style={destTitleStyle}>يوم الزواج</span>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '3px' }}>
                 <span className="num" style={destValueStyle}>{countdown.value}</span>
                 <span style={destSubStyle}>{countdown.sub}</span>
               </div>
@@ -68,48 +92,40 @@ export default function Journey() {
           </div>
         </div>
 
-        <p style={progressNoteStyle}>
-          أنجزت <span className="num" style={{ fontWeight: 800, color: 'var(--accent)' }}>{doneCount}</span> من {milestones.length} خطوات
-        </p>
       </div>
     </div>
   );
 }
 
 function MilestoneRow({ milestone, isNext }: { milestone: Milestone; isNext: boolean }) {
-  const { done } = milestone;
+  const stateKey: NodeState = milestone.done ? 'done' : isNext ? 'next' : 'pending';
+  const iconColor = stateKey === 'done' ? 'var(--text-inverse)' : stateKey === 'next' ? 'var(--accent)' : 'var(--text-tertiary)';
+
   return (
     <div style={rowStyle}>
       <div style={railStyle}>
-        <div style={done ? doneDotStyle : (isNext ? nextDotStyle : pendingDotStyle)} aria-hidden="true">
-          {done && (
-            <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
-              <path d="M1 3.5L4 6.5L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
+        <div style={iconCircleStyle(stateKey)} aria-hidden="true">
+          {milestone.done
+            ? <CheckIcon size={16} color="var(--text-inverse)" />
+            : <milestone.Icon size={15} color={iconColor} />}
         </div>
-        <div style={{ ...connectorStyle, background: done ? 'var(--accent)' : 'var(--border)' }} />
+        <div style={{ ...connectorStyle, background: milestone.done ? 'var(--accent)' : 'var(--border)' }} />
       </div>
-      <div style={rowContentStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-          <span style={{
-            fontSize: 'var(--font-size-base)',
-            fontWeight: done ? 700 : 600,
-            color: done ? 'var(--text-primary)' : isNext ? 'var(--accent)' : 'var(--text-tertiary)',
-          }}>
-            {milestone.title}
-          </span>
-          {isNext && <span style={nextTagStyle}>التالي</span>}
+
+      <div style={cardStyle(stateKey)}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-2)' }}>
+          <span style={titleStyle(stateKey)}>{milestone.title}</span>
+          {milestone.done
+            ? <span style={doneChipStyle}>تم</span>
+            : isNext ? <span style={nextChipStyle}>التالي</span> : null}
         </div>
-        {milestone.detail && (
-          <span className="num" style={detailStyle}>{milestone.detail}</span>
-        )}
+        {milestone.detail && <span className="num" style={detailStyle}>{milestone.detail}</span>}
       </div>
     </div>
   );
 }
 
-const headerStyle: React.CSSProperties = {
+const pageHeaderStyle: React.CSSProperties = {
   padding: 'var(--page-top) var(--space-5) var(--space-4)',
   background: 'var(--bg-card)',
   borderBottom: '1px solid var(--border-light)',
@@ -123,8 +139,87 @@ const contentStyle: React.CSSProperties = {
   maxWidth: '480px',
   margin: '0 auto',
   paddingBottom: 'calc(var(--nav-height) + var(--safe-bottom) + var(--space-6))',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-5)',
 };
 
+/* --- Hero --- */
+const heroStyle: React.CSSProperties = {
+  position: 'relative',
+  overflow: 'hidden',
+  background: 'var(--bg-card)',
+  borderRadius: 'var(--radius-2xl)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06)',
+  padding: 'var(--space-6)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-3)',
+};
+
+const heroGlowStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  background: 'radial-gradient(130% 90% at 90% -10%, rgba(201,147,104,0.16), transparent 55%)',
+  pointerEvents: 'none',
+};
+
+const heroTopBarStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  insetInlineStart: 0,
+  insetInlineEnd: 0,
+  height: '3px',
+  background: 'linear-gradient(90deg, var(--accent-dark), var(--accent), var(--accent-light))',
+};
+
+const heroLabelStyle: React.CSSProperties = {
+  position: 'relative',
+  fontSize: 'var(--font-size-sm)',
+  color: 'var(--text-secondary)',
+  fontWeight: 600,
+};
+
+const heroNumberStyle: React.CSSProperties = {
+  fontSize: '44px',
+  fontWeight: 800,
+  color: 'var(--accent)',
+  lineHeight: 1,
+  letterSpacing: '-0.02em',
+};
+
+const heroSubStyle: React.CSSProperties = {
+  fontSize: 'var(--font-size-md)',
+  fontWeight: 600,
+  color: 'var(--text-secondary)',
+};
+
+const heroTrackStyle: React.CSSProperties = {
+  position: 'relative',
+  width: '100%',
+  height: '8px',
+  background: 'var(--track)',
+  borderRadius: 'var(--radius-full)',
+  overflow: 'hidden',
+  marginTop: '4px',
+};
+
+const heroFillStyle: React.CSSProperties = {
+  height: '100%',
+  borderRadius: 'inherit',
+  background: 'linear-gradient(90deg, var(--accent-dark), var(--accent))',
+  transition: 'width 0.9s cubic-bezier(0.4,0,0.2,1)',
+};
+
+const heroProgressLabelStyle: React.CSSProperties = {
+  position: 'relative',
+  fontSize: 'var(--font-size-sm)',
+  color: 'var(--text-tertiary)',
+  fontWeight: 500,
+};
+
+/* --- Timeline --- */
 const timelineStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -140,13 +235,13 @@ const railStyle: React.CSSProperties = {
   flexDirection: 'column',
   alignItems: 'center',
   alignSelf: 'stretch',
-  width: 22,
+  width: 36,
   flexShrink: 0,
 };
 
-const baseDot: React.CSSProperties = {
-  width: 22,
-  height: 22,
+const baseIcon: React.CSSProperties = {
+  width: 36,
+  height: 36,
   borderRadius: '50%',
   display: 'flex',
   alignItems: 'center',
@@ -154,45 +249,49 @@ const baseDot: React.CSSProperties = {
   flexShrink: 0,
 };
 
-const doneDotStyle: React.CSSProperties = {
-  ...baseDot,
-  background: 'var(--accent)',
-};
+function iconCircleStyle(stateKey: NodeState): React.CSSProperties {
+  if (stateKey === 'done') return { ...baseIcon, background: 'var(--accent)' };
+  if (stateKey === 'next') return { ...baseIcon, background: 'var(--accent-light)', border: '2px solid var(--accent)', boxShadow: '0 0 0 4px var(--accent-light)' };
+  return { ...baseIcon, background: 'var(--bg-secondary)', border: '1px solid var(--border)' };
+}
 
-const nextDotStyle: React.CSSProperties = {
-  ...baseDot,
-  background: 'var(--bg-card)',
-  border: '2px solid var(--accent)',
-  boxShadow: '0 0 0 4px var(--accent-light)',
-};
-
-const pendingDotStyle: React.CSSProperties = {
-  ...baseDot,
-  background: 'var(--bg-card)',
-  border: '2px solid var(--border)',
-};
-
-const destDotStyle: React.CSSProperties = {
-  ...baseDot,
+const destIconStyle: React.CSSProperties = {
+  ...baseIcon,
   background: 'linear-gradient(135deg, var(--accent-dark), var(--accent))',
+  boxShadow: '0 4px 12px rgba(201,147,104,0.35)',
 };
 
 const connectorStyle: React.CSSProperties = {
   width: 2,
   flex: 1,
-  minHeight: 16,
-  marginTop: 2,
+  minHeight: 14,
+  marginTop: 4,
   borderRadius: 'var(--radius-full)',
 };
 
-const rowContentStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '2px',
-  paddingBottom: 'var(--space-5)',
-  paddingTop: '1px',
-  minWidth: 0,
-};
+function cardStyle(stateKey: NodeState): React.CSSProperties {
+  return {
+    flex: 1,
+    minWidth: 0,
+    marginBottom: 'var(--space-3)',
+    background: stateKey === 'pending' ? 'transparent' : 'var(--bg-card)',
+    border: `1px solid ${stateKey === 'next' ? 'var(--accent)' : stateKey === 'pending' ? 'var(--border-light)' : 'var(--border-light)'}`,
+    borderRadius: 'var(--radius-lg)',
+    boxShadow: stateKey === 'pending' ? 'none' : 'var(--shadow-sm)',
+    padding: 'var(--space-3) var(--space-4)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+  };
+}
+
+function titleStyle(stateKey: NodeState): React.CSSProperties {
+  return {
+    fontSize: 'var(--font-size-base)',
+    fontWeight: stateKey === 'done' ? 700 : 600,
+    color: stateKey === 'done' ? 'var(--text-primary)' : stateKey === 'next' ? 'var(--accent)' : 'var(--text-tertiary)',
+  };
+}
 
 const detailStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-xs)',
@@ -200,26 +299,36 @@ const detailStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
-const nextTagStyle: React.CSSProperties = {
+const doneChipStyle: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 700,
+  color: 'var(--success)',
+  background: 'var(--success-light)',
+  borderRadius: 'var(--radius-full)',
+  padding: '2px 8px',
+  flexShrink: 0,
+};
+
+const nextChipStyle: React.CSSProperties = {
   fontSize: '10px',
   fontWeight: 700,
   color: 'var(--accent)',
   background: 'var(--accent-light)',
   borderRadius: 'var(--radius-full)',
   padding: '2px 8px',
+  flexShrink: 0,
 };
 
 const destCardStyle: React.CSSProperties = {
   flex: 1,
   minWidth: 0,
   background: 'var(--bg-card)',
-  border: '1px solid var(--border)',
+  border: '1px solid var(--accent)',
   borderRadius: 'var(--radius-xl)',
-  boxShadow: 'var(--shadow-sm)',
-  padding: 'var(--space-3) var(--space-4)',
+  boxShadow: 'var(--shadow-md)',
+  padding: 'var(--space-4)',
   display: 'flex',
   flexDirection: 'column',
-  marginTop: '-2px',
 };
 
 const destTitleStyle: React.CSSProperties = {
@@ -229,7 +338,7 @@ const destTitleStyle: React.CSSProperties = {
 };
 
 const destValueStyle: React.CSSProperties = {
-  fontSize: 'var(--font-size-xl)',
+  fontSize: 'var(--font-size-2xl)',
   fontWeight: 800,
   color: 'var(--accent)',
   lineHeight: 1,
@@ -239,11 +348,4 @@ const destSubStyle: React.CSSProperties = {
   fontSize: 'var(--font-size-sm)',
   color: 'var(--text-secondary)',
   fontWeight: 600,
-};
-
-const progressNoteStyle: React.CSSProperties = {
-  textAlign: 'center',
-  fontSize: 'var(--font-size-sm)',
-  color: 'var(--text-tertiary)',
-  margin: 'var(--space-5) 0 0',
 };
