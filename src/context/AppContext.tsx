@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback } 
 import type { Settings, Category, ExpenseItem, SupportItem, JourneyEvent } from '../types';
 import * as db from '../db/database';
 import { calculateBudgetStats } from '../utils/calculations';
+import { checkAndFireNotifications, defaultNotificationPrefs } from '../utils/notifications';
 import type { BudgetStats } from '../types';
 
 interface AppState {
@@ -140,6 +141,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refreshData();
   }, [refreshData]);
+
+  // Fire any due reminders (weekly / near-wedding / payment-due). All gated behind
+  // prefs.enabled + granted permission, and internally debounced (12h / once-per-day).
+  useEffect(() => {
+    const s = state.settings;
+    if (!state.initialized || !s || !s.setupComplete) return;
+    const prefs = s.notificationPrefs ?? defaultNotificationPrefs();
+    if (!prefs.enabled) return;
+    let cancelled = false;
+    (async () => {
+      const updated = await checkAndFireNotifications(
+        prefs,
+        state.stats?.daysRemaining ?? null,
+        state.stats?.spentPercentage ?? 0,
+        s.weddingDate,
+        state.expenses,
+      );
+      if (cancelled) return;
+      if (updated.lastChecked !== prefs.lastChecked || updated.paymentDueLastChecked !== prefs.paymentDueLastChecked) {
+        const newSettings = { ...s, notificationPrefs: updated };
+        await db.saveSettings(newSettings);
+        dispatch({ type: 'UPDATE_SETTINGS', payload: newSettings });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [state.initialized, state.settings, state.expenses, state.stats]);
 
   return (
     <AppContext.Provider value={{ state, dispatch, refreshData }}>

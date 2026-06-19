@@ -22,7 +22,9 @@ export interface NotificationPrefs {
   midpoint: boolean;
   nearWedding: boolean;
   budgetOverrun: boolean;
+  paymentDue?: boolean;
   lastChecked?: string;
+  paymentDueLastChecked?: string;
 }
 
 export interface Settings {

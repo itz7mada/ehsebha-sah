@@ -451,11 +451,32 @@ export default function Settings() {
                 )}
 
                 {notifPrefs.enabled && notifPermission === 'granted' && (
-                  <div style={{ padding: 'var(--space-3) var(--space-4)', borderTop: '1px solid var(--border-light)' }}>
-                    <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
-                      ستصلك تذكيرات أسبوعية وتنبيهات عند اقتراب موعد الزواج أو تجاوز الميزانية.
-                    </p>
-                  </div>
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-4)', borderTop: '1px solid var(--border-light)' }}>
+                      <span style={iconWrapStyle}><CalendarIcon size={18} color="var(--accent)" /></span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 'var(--font-size-base)', color: 'var(--text-primary)', fontWeight: 600, display: 'block' }}>
+                          تذكير الدفعات
+                        </span>
+                        <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                          تذكير عند اقتراب موعد دفع أحد البنود
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        style={toggleSwitchStyle(notifPrefs.paymentDue !== false)}
+                        onClick={() => updateNotifPrefs({ paymentDue: !(notifPrefs.paymentDue !== false) })}
+                        aria-label="تذكير الدفعات"
+                      >
+                        <div style={toggleKnobStyle(notifPrefs.paymentDue !== false)} />
+                      </button>
+                    </div>
+                    <div style={{ padding: 'var(--space-3) var(--space-4)', borderTop: '1px solid var(--border-light)' }}>
+                      <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+                        تذكيرات أسبوعية وعند اقتراب موعد الزواج أو الدفعات أو تجاوز الميزانية. تظهر عند فتحك للتطبيق، وليست تنبيهات مضمونة والتطبيق مغلق.
+                      </p>
+                    </div>
+                  </>
                 )}
               </>
             )}

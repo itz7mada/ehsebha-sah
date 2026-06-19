@@ -1,4 +1,16 @@
-import type { NotificationPrefs } from '../types';
+import { parseISO, differenceInCalendarDays } from 'date-fns';
+import type { NotificationPrefs, ExpenseItem } from '../types';
+
+/** Calendar-days from today until a YYYY-MM-DD date (negative if overdue), or null. */
+function daysUntil(dateStr: string): number | null {
+  try {
+    const d = parseISO(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return differenceInCalendarDays(d, new Date());
+  } catch {
+    return null;
+  }
+}
 
 export function isNotificationSupported(): boolean {
   return 'Notification' in window;
@@ -42,6 +54,7 @@ export function defaultNotificationPrefs(): NotificationPrefs {
     midpoint: true,
     nearWedding: true,
     budgetOverrun: true,
+    paymentDue: true,
   };
 }
 
@@ -50,6 +63,7 @@ export async function checkAndFireNotifications(
   daysRemaining: number | null,
   budgetPercent: number,
   weddingDate: string,
+  expenses: ExpenseItem[] = [],
 ): Promise<NotificationPrefs> {
   if (!prefs.enabled || Notification.permission !== 'granted') return prefs;
 
@@ -90,5 +104,27 @@ export async function checkAndFireNotifications(
     await showLocalNotification('تنبيه الميزانية', 'لقد تجاوزت الميزانية المحددة ⚠️');
   }
 
-  return { ...prefs, lastChecked: now.toISOString() };
+  let next: NotificationPrefs = { ...prefs, lastChecked: now.toISOString() };
+
+  // Payment-due reminder — at most once per calendar day.
+  if (prefs.paymentDue !== false) {
+    const todayStr = now.toISOString().slice(0, 10);
+    const lastPayStr = prefs.paymentDueLastChecked ? prefs.paymentDueLastChecked.slice(0, 10) : '';
+    if (lastPayStr !== todayStr) {
+      const dueSoon = expenses.filter(e => {
+        if (!e.dueDate || (e.status !== 'unpaid' && e.status !== 'partial')) return false;
+        const d = daysUntil(e.dueDate);
+        return d !== null && d <= 2; // overdue, today, or within 2 days
+      });
+      if (dueSoon.length === 1) {
+        await showLocalNotification('احسبها صح', `عندك دفعة قريبة: ${dueSoon[0].name}`);
+        next = { ...next, paymentDueLastChecked: now.toISOString() };
+      } else if (dueSoon.length > 1) {
+        await showLocalNotification('احسبها صح', `عندك ${dueSoon.length} دفعات قريبة`);
+        next = { ...next, paymentDueLastChecked: now.toISOString() };
+      }
+    }
+  }
+
+  return next;
 }
