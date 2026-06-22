@@ -145,7 +145,7 @@ export default function ReportPreview() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '320px' }}>
             <thead>
               <tr>
-                {['البند الرئيسي', 'العنصر', 'التاريخ', 'المبلغ'].map(h => (
+                {['البند الرئيسي', 'البند', 'التاريخ', 'المبلغ'].map(h => (
                   <th key={h} style={thStyle}>{h}</th>
                 ))}
               </tr>
