@@ -25,14 +25,16 @@ export function BottomNav() {
     insetInlineStart: 0,
     insetInlineEnd: 0,
     height: 'calc(var(--nav-height) + var(--safe-bottom))',
-    background: 'var(--bg-card)',
+    background: 'var(--nav-bg)',
+    backdropFilter: 'blur(22px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(22px) saturate(180%)',
     borderTop: '1px solid var(--border-light)',
     display: 'flex',
     alignItems: 'flex-start',
     paddingTop: 'var(--space-1)',
     paddingBottom: 'var(--safe-bottom)',
     zIndex: 50,
-    boxShadow: '0 -4px 16px rgba(0,0,0,0.05)',
+    boxShadow: '0 -8px 28px rgba(0,0,0,0.07)',
     transition: 'transform var(--transition-fast)',
   };
 
@@ -76,7 +78,8 @@ export function BottomNav() {
                   padding: '7px 22px',
                   borderRadius: 'var(--radius-full)',
                   background: isActive ? 'var(--accent-light)' : 'var(--bg-secondary)',
-                  boxShadow: isActive ? '0 2px 8px rgba(196,146,42,0.18)' : '0 1px 4px rgba(0,0,0,0.06)',
+                  border: isActive ? '1px solid rgba(201,147,104,0.30)' : '1px solid transparent',
+                  boxShadow: isActive ? '0 4px 14px rgba(201,147,104,0.28)' : '0 1px 4px rgba(0,0,0,0.06)',
                   transition: 'all var(--transition-fast)',
                   marginTop: '-4px',
                 }}>
